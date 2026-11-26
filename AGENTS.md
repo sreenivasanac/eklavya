@@ -53,6 +53,16 @@ export ANDROID_HOME=/opt/homebrew/share/android-commandlinetools
   keeps running otherwise.
 - UI changes follow `DESIGN.md`.
 
+## The website and CodeRabbit Verify
+
+- The only web app in this repository is the static site in `site/`. It needs no install and no build:
+  `python3 -m http.server 8080 --directory site`, then open `http://localhost:8080/`. The Android app cannot
+  run in a sandbox without a phone, and CodeRabbit Verify does not test native apps: for Verify, the thing to
+  start and test is the site.
+- Deploy: `rsync -az --delete --exclude DESIGN.md --exclude og.html --exclude .DS_Store site/ hetzner-agent:/var/www/eklavya/`,
+  then open https://eklavya.pragnyalabs.com/ and check both pages. No analytics on this site, on purpose.
+- When the app's behaviour or measurements change, the README and the site say the same things: update both.
+
 ## Camera and rep counting
 
 - The counter and form rules are plain Kotlin in `motion/` and are tuned on recorded poses, not on the phone:
