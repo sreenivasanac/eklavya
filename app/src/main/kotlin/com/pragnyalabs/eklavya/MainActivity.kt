@@ -6,6 +6,8 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Typeface
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
@@ -20,7 +22,13 @@ import com.pragnyalabs.eklavya.voice.WakeWord
  */
 class MainActivity : Activity() {
     private val status by lazy { findViewById<TextView>(R.id.status) }
+    private val statusDetail by lazy { findViewById<TextView>(R.id.status_detail) }
     private val session by lazy { findViewById<Button>(R.id.session) }
+    private val saveKeys by lazy { findViewById<Button>(R.id.save_keys) }
+    private val keyFields by lazy { listOf(findViewById<EditText>(R.id.openai_key), findViewById<EditText>(R.id.jev_key)) }
+
+    /** The user asked to replace saved keys; until then the key fields stay folded away. */
+    private var changingKeys = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,23 +45,42 @@ class MainActivity : Activity() {
             // Notifications are asked for in the same breath: the session shows one while it listens.
             requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.POST_NOTIFICATIONS), 0)
         }
-        findViewById<Button>(R.id.save_keys).setOnClickListener {
-            save(R.id.openai_key, "openai_key")
-            save(R.id.jev_key, "jev_key")
+        // "Change" opens the key fields; the same button then reads "Cancel" and closes them unchanged.
+        findViewById<Button>(R.id.keys_action).setOnClickListener {
+            changingKeys = !changingKeys
+            keyFields.forEach { it.text.clear() }
             refresh()
         }
+        saveKeys.setOnClickListener {
+            save(R.id.openai_key, "openai_key")
+            save(R.id.jev_key, "jev_key")
+            changingKeys = false
+            refresh()
+        }
+        // "Save keys" is an action only once there is something to save.
+        val typed = object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                saveKeys.isEnabled = keyFields.any { it.text.isNotBlank() }
+            }
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+        }
+        keyFields.forEach { it.addTextChangedListener(typed) }
     }
 
     override fun onStart() {
         super.onStart()
+        inFront = true
         CoachService.onChange = ::refresh
-        EklavyaService.instance?.overlay?.hidden = true
+        EklavyaService.instance?.overlay?.refresh()
         refresh()
     }
 
     override fun onStop() {
+        inFront = false
         CoachService.onChange = null
-        EklavyaService.instance?.overlay?.hidden = false
+        EklavyaService.instance?.overlay?.refresh()
         super.onStop()
     }
 
@@ -73,23 +100,38 @@ class MainActivity : Activity() {
         val voiceKey = Settings.get(this, "openai_key") != null
         // Whichever decision model is selected must be fully set up, not just any key saved.
         val decisionKey = Settings.decider(this) != null
+        val keys = voiceKey && decisionKey
         val running = CoachService.instance != null
 
         row(R.id.screen_state, R.id.screen_action, screenOn)
         row(R.id.mic_state, R.id.mic_action, micOn)
-        findViewById<TextView>(R.id.keys_state).setText(if (voiceKey && decisionKey) R.string.state_saved else R.string.state_missing_keys)
+        findViewById<TextView>(R.id.keys_state).setText(if (keys) R.string.state_saved else R.string.state_missing_keys)
+        // With both keys saved, the fields fold away behind "Change".
+        findViewById<Button>(R.id.keys_action).apply {
+            visibility = if (keys) View.VISIBLE else View.GONE
+            setText(if (changingKeys) R.string.action_cancel else R.string.action_change)
+        }
+        findViewById<View>(R.id.keys_section).visibility = if (keys && !changingKeys) View.GONE else View.VISIBLE
         hint(R.id.openai_key, voiceKey)
         hint(R.id.jev_key, decisionKey)
+        saveKeys.isEnabled = keyFields.any { it.text.isNotBlank() }
 
-        val ready = screenOn && micOn && voiceKey && decisionKey
+        val ready = screenOn && micOn && keys
         session.isEnabled = ready || running
         session.setText(if (running) R.string.end_session else R.string.start_session)
+        val waiting = running && CoachService.current == CoachService.State.WAITING
         status.text = when {
-            running && CoachService.current == CoachService.State.WAITING -> getString(R.string.status_waiting, WakeWord.PHRASE)
+            waiting -> getString(R.string.status_waiting, WakeWord.PHRASE)
             running -> getString(R.string.status_talking)
             !ready -> getString(R.string.status_blocked)
             else -> getString(R.string.status_off)
         }
+        statusDetail.text = when {
+            waiting -> getString(R.string.status_waiting_detail)
+            !running && !ready -> getString(R.string.status_blocked_detail)
+            else -> ""
+        }
+        statusDetail.visibility = if (statusDetail.text.isEmpty()) View.GONE else View.VISIBLE
     }
 
     /** A setup row shows its state when it is done and its action when it is not, never both. */
@@ -103,5 +145,12 @@ class MainActivity : Activity() {
         input.setHint(if (saved) R.string.key_hint_saved else R.string.key_hint_empty)
         // A password field switches itself to a monospace face; keep the screen in one typeface.
         input.typeface = Typeface.DEFAULT
+    }
+
+    companion object {
+        /** True while this screen is visible; the status pill stays away then, since the screen says the same. */
+        @Volatile
+        var inFront = false
+            private set
     }
 }

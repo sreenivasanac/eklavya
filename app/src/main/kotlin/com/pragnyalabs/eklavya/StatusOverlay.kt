@@ -30,12 +30,8 @@ class StatusOverlay(private val service: AccessibilityService) {
         render()
     }
 
-    /** While Eklavya's own screen is in front the pill stays away: that screen already says the same thing. */
-    var hidden = false
-        set(value) {
-            field = value
-            show(state, null)
-        }
+    /** Call when Eklavya's own screen comes to the front or leaves it: the pill stays away while it is there. */
+    fun refresh() = show(state, null)
 
     /** Shows [state], or hides the pill when it is null. An [error] replaces the text for a few seconds. */
     fun show(state: CoachService.State?, error: String?) {
@@ -45,7 +41,7 @@ class StatusOverlay(private val service: AccessibilityService) {
             handler.removeCallbacks(clearError)
             handler.postDelayed(clearError, ERROR_MS)
         }
-        if (state == null || hidden) {
+        if (state == null || MainActivity.inFront) {
             pill?.let(windows::removeView)
             pill = null
             return

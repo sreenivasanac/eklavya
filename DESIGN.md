@@ -42,6 +42,9 @@ buttons and a full round for the pill.
 - More space above a section heading than below it.
 - A saved key is never shown again; the field only says it is saved.
 - The pill never takes a touch and hides itself while Eklavya's own screen is in front.
+- The session's state is the largest text on the screen (display role); the app's name is a small label above it.
+- Once both keys are saved the key fields fold away behind "Change"; a saved thing is said once.
+- A quiet button is amber only while it can do something; with nothing to save it is grey.
 
 ## Never
 

@@ -9,5 +9,5 @@
     <dimen name="row">56dp</dimen>
     <dimen name="radius">12dp</dimen>
     <dimen name="radius_pill">22dp</dimen>
-    <dimen name="overlay_top">64dp</dimen>
+    <dimen name="overlay_top">72dp</dimen>
 </resources>

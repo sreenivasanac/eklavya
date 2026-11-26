@@ -44,7 +44,7 @@
     </style>
     <!-- A quiet action inside a row: text only, still a full-size touch target. -->
     <style name="Button.Quiet" parent="android:Widget.Material.Button.Borderless">
-        <item name="android:textColor">@color/accent</item>
+        <item name="android:textColor">@color/button_quiet_text</item>
         <item name="android:textSize">15sp</item>
         <item name="android:fontFamily">sans-serif-medium</item>
         <item name="android:textAllCaps">false</item>

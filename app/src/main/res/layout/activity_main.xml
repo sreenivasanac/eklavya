@@ -16,13 +16,21 @@
         android:paddingBottom="@dimen/space_5">
 
         <TextView
-            style="@style/Text.Display"
+            style="@style/Text.Headline"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/app_name" />
 
+        <!-- The state is what gets read from across the room, so it is the largest thing here. -->
         <TextView
             android:id="@+id/status"
+            style="@style/Text.Display"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_1" />
+
+        <TextView
+            android:id="@+id/status_detail"
             style="@style/Text.Body"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -131,9 +139,23 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@color/muted" />
+
+            <Button
+                android:id="@+id/keys_action"
+                style="@style/Button.Quiet"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/touch"
+                android:text="@string/action_change" />
         </LinearLayout>
 
         <View style="@style/Divider" />
+
+        <!-- Shown while a key is missing, or after "Change"; otherwise the row above says all there is to say. -->
+        <LinearLayout
+            android:id="@+id/keys_section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
         <TextView
             style="@style/Text.Headline"
@@ -155,6 +177,8 @@
             style="@style/Text.Body"
             android:layout_width="match_parent"
             android:layout_height="@dimen/touch"
+            android:layout_marginStart="-4dp"
+            android:layout_marginEnd="-4dp"
             android:importantForAutofill="no"
             android:inputType="textPassword"
             android:singleLine="true" />
@@ -172,6 +196,8 @@
             style="@style/Text.Body"
             android:layout_width="match_parent"
             android:layout_height="@dimen/touch"
+            android:layout_marginStart="-4dp"
+            android:layout_marginEnd="-4dp"
             android:importantForAutofill="no"
             android:inputType="textPassword"
             android:singleLine="true" />
@@ -191,5 +217,6 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/space_1"
             android:text="@string/keys_caption" />
+        </LinearLayout>
     </LinearLayout>
 </ScrollView>
