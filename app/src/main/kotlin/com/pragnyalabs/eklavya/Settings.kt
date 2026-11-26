@@ -14,13 +14,20 @@ import com.pragnyalabs.eklavya.agent.JevDecider
  *              phone (plain http to any other host is refused)
  *   chat_model model name at that endpoint
  *   chat_key   key for that endpoint; empty for a local one
+ *   openai_key OpenAI API key, used for the voice session
+ *   voice_model, voice_backend_model, voice
+ *              the speech model, the text model that picks tools for it, and the speaking voice;
+ *              unset means the defaults in CoachService
  *
  * ponytail: keys sit in plain SharedPreferences (private to the app, excluded from backup). Wrap them with
  * an Android Keystore key before this is installed on anyone else's phone.
  */
 object Settings {
     private const val FILE = "settings"
-    private val NAMES = setOf("decider", "jev_key", "chat_url", "chat_model", "chat_key")
+    private val NAMES = setOf(
+        "decider", "jev_key", "chat_url", "chat_model", "chat_key",
+        "openai_key", "voice_model", "voice_backend_model", "voice",
+    )
     private val LOCAL = Regex("""^http://(127\.0\.0\.1|localhost)(:\d+)?(/|$)""")
 
     fun set(context: Context, name: String, value: String) {
@@ -32,6 +39,10 @@ object Settings {
         }
         context.getSharedPreferences(FILE, Context.MODE_PRIVATE).edit().putString(name, value).apply()
     }
+
+    /** A setting's value, or null when it is unset or blank. */
+    fun get(context: Context, name: String): String? =
+        context.getSharedPreferences(FILE, Context.MODE_PRIVATE).getString(name, null)?.takeIf { it.isNotBlank() }
 
     /** The decision model the user chose, or null when it is not fully configured. */
     fun decider(context: Context): Decider? {

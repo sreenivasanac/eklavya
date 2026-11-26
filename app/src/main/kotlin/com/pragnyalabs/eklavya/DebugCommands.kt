@@ -12,6 +12,8 @@ import com.pragnyalabs.eklavya.agent.Goal
 import com.pragnyalabs.eklavya.agent.Navigator
 import com.pragnyalabs.eklavya.a11y.ScreenDriver
 import com.pragnyalabs.eklavya.screen.ScreenText
+import com.pragnyalabs.eklavya.voice.CoachService
+import java.io.File
 import java.util.concurrent.ExecutorService
 
 /**
@@ -23,7 +25,8 @@ import java.util.concurrent.ExecutorService
  *     adb logcat -s Eklavya
  *
  * Commands: dump, tap n, text n arg, submit n, scroll n [arg=back], back, open arg, demo arg,
- * nav arg (an exercise name: the decision model finds and plays its demo), set arg (name=value, see Settings).
+ * nav arg (an exercise name: the decision model finds and plays its demo), set arg (name=value, see Settings),
+ * hear arg (a recording to play into the running voice session).
  */
 object DebugCommands {
     const val ACTION = "com.pragnyalabs.eklavya.DEBUG"
@@ -53,6 +56,10 @@ object DebugCommands {
                             "open" -> driver.openApp(arg)
                             "demo" -> TwentyFourGo(driver) { Log.i(TAG, "demo: $it") }.playDemo(arg)
                             "nav" -> navigate(service, driver, arg)
+                            // Plays a recording into a running session as if spoken: arg is a 16 kHz mono PCM16 file
+                            // in the app's files folder. This is how the voice path is tested without a person.
+                            "hear" -> CoachService.instance?.let { it.hear(File(service.filesDir, arg).inputStream()); "playing $arg into the session" }
+                                ?: "no session is running; start one in the app first"
                             // The value may be a key: say which setting changed, never what it was set to.
                             "set" -> {
                                 Settings.set(service, arg.substringBefore('='), arg.substringAfter('=', ""))

@@ -12,7 +12,9 @@ android {
         minSdk = 33
         targetSdk = 36
         versionCode = 1
-        versionName = "0.1.0"
+        versionName = "0.2.0"
+        // The wake-word library ships native code for four processor types; phones need only this one.
+        ndk { abiFilters += "arm64-v8a" }
     }
     buildFeatures {
         buildConfig = true
@@ -26,4 +28,8 @@ android {
 dependencies {
     implementation(project(":a11y"))
     implementation(project(":agent"))
+    // The voice session is a WebSocket; Android has no built-in client for one.
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    // On-device wake word (keyword spotting).
+    implementation("com.github.k2-fsa.sherpa-onnx:sherpa-onnx:v2.0.1")
 }

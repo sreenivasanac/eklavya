@@ -2,4 +2,39 @@
 <resources>
     <string name="app_name">Eklavya</string>
     <string name="accessibility_description">Eklavya reads what is on screen and taps for you, so that a spoken request such as \"show me the video for this exercise\" can be carried out in your gym\'s app. It acts only when you ask.</string>
+
+    <!-- Setup screen -->
+    <string name="status_off">Not running. Start a session when you begin training.</string>
+    <string name="status_waiting">Listening for \"%1$s\". Nothing is sent until it hears that.</string>
+    <string name="status_talking">In conversation.</string>
+    <string name="status_blocked">Finish the steps below to start.</string>
+    <string name="start_session">Start session</string>
+    <string name="end_session">End session</string>
+    <string name="section_setup">Before you start</string>
+    <string name="setup_screen_control">Screen control</string>
+    <string name="setup_microphone">Microphone</string>
+    <string name="setup_keys">API keys</string>
+    <string name="state_on">On</string>
+    <string name="state_allowed">Allowed</string>
+    <string name="state_saved">Saved</string>
+    <string name="state_missing_keys">Add below</string>
+    <string name="action_turn_on">Turn on</string>
+    <string name="action_allow">Allow</string>
+    <string name="section_keys">Your keys</string>
+    <string name="key_openai">OpenAI key (voice)</string>
+    <string name="key_typesafe">TypeSafe key (finding the way in your gym\'s app)</string>
+    <string name="key_hint_empty">Paste key</string>
+    <string name="key_hint_saved">Saved. Paste to replace.</string>
+    <string name="save_keys">Save keys</string>
+    <string name="keys_caption">Keys stay on this phone and are sent only to the service they belong to. A one-hour workout costs roughly 50 cents to a dollar in voice time.</string>
+
+    <!-- Overlay and notification -->
+    <string name="overlay_waiting">Say \"%1$s\"</string>
+    <string name="overlay_connecting">Connecting</string>
+    <string name="overlay_talking">Listening</string>
+    <string name="overlay_working">Working on it</string>
+    <string name="error_no_voice_key">Add your OpenAI key in Eklavya</string>
+    <string name="channel_session">Workout session</string>
+    <string name="notification_title">Eklavya is on</string>
+    <string name="notification_text">Listening for \"%1$s\"</string>
 </resources>

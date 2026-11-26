@@ -39,26 +39,29 @@ Decisions taken with the owner on 2026-11-25. Change them here when they change.
 - The phone locks after 30 seconds; the app must keep the screen on during
   a session.
 
-## Local (on-device) models
+## Models and providers (decided 2026-11-25)
 
-Asked for on 2026-11-25: gyms have poor signal, so each AI part should have an on-device option next to
-the cloud one, chosen by the user. Researched the same day; nothing below has been run on the phone yet.
+Cloud only: the owner dropped on-device models, since 24GO's pages and videos need a connection anyway.
 
-- Apple's on-device models run only on Apple hardware and their weights are not published. Not usable here.
-- Google's Gemini Nano (AICore) is offered on Pixel 9 and later, not on the Pixel 7a.
-- Decision model: Gemma 4 E2B on Google's LiteRT-LM runtime (2.58 GB, Apache-2.0) is the general pick;
-  estimated 3 to 4 s per decision on the 7a's GPU, about 20 s on CPU. FunctionGemma 270M (288 MB) is far
-  faster but needs fine-tuning on recorded screens. Small Qwen or Llama models on llama.cpp sit in between.
-- Speech-to-text: Moonshine or Parakeet through sherpa-onnx, or Android's built-in offline recogniser.
-- Text-to-speech: Android TextToSpeech; Piper through sherpa-onnx as the alternative.
-- Wake word: sherpa-onnx keyword spotting (Apache-2.0, any typed phrase).
-- No full speech-to-speech model runs on this phone; local voice is turn-based.
-- Cheapest way to need fewer decisions offline: record each successful path through an app and replay it,
-  asking a model only when a screen differs from the recording.
-- The code already takes any OpenAI-style endpoint as the decision model (`Settings`, `ChatDecider`).
+- **Decisions: TypeSafe Jev.** On the 16-case test set it was right as often as the best alternative and
+  about ten times faster and twenty-five times cheaper. Any OpenAI-style chat endpoint (OpenAI, xAI,
+  OpenRouter) is the configurable alternative (`decider=chat`). Risk: one small vendor.
+- **Voice: OpenAI GPT-Live 1.1** over a WebSocket, one session per exchange, with a small text model
+  (`gpt-5.6-luna`) choosing the tool ("Responses delegation"). Research put it first on tool tasks and
+  second in heavy noise. Runner-up: Gemini Live (about a quarter of the price, weaker on tool tasks);
+  third: Grok Voice (fastest, weakest in noise, $0.08 a minute). No aggregator serves realtime voice
+  with one hosted key, so the app takes per-provider keys.
+- A WebSocket session has no cheaper standby rate (that is WebRTC only), which is one more reason to
+  close the session after each exchange.
+- **Wake word: "Hey Drona"**, spotted on the phone by sherpa-onnx's open-vocabulary model. "Hey Eklavya"
+  is a poor fit for an untrained model (0 of 16 test clips caught). A trained model (LiveKit WakeWord,
+  the best noise numbers found) would allow any phrase but needs LiveKit Cloud keys and a training run.
+- On the phone's own speaker the microphone is muted towards the model while the coach speaks, so it
+  does not hear itself; with earphones it listens throughout.
 
 ## Open
 
 - 24GO's terms on automation have not been read.
-- No timing yet from spoken request to video playing.
+- Voice is untested with a real voice, with earbuds and in a gym. With recordings: about 12 s from the wake phrase to the video.
+- The coach has one tool. Planning, set logging (Hevy) and the 24GO exercise catalogue are next.
 - Hevy has not been driven or called.

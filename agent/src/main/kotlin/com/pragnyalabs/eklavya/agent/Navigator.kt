@@ -20,7 +20,15 @@ class Goal(
     val home: String? = null,
 )
 
-class Outcome(val done: Boolean, val reason: String, val steps: List<String>, val inputTokens: Int, val costUsd: Double)
+class Outcome(
+    val done: Boolean,
+    val reason: String,
+    val steps: List<String>,
+    val inputTokens: Int,
+    val costUsd: Double,
+    /** The navigator stopped at a screen that asks for a decision only the user may take. */
+    val needsUser: Boolean = false,
+)
 
 /**
  * Works towards a [Goal] one step at a time: read the screen, offer the model every possible action as a
@@ -62,7 +70,12 @@ class Navigator(
             val chosen = options.firstOrNull { it.id == decision.option } ?: return end(false, "the model chose \"${decision.option}\", which was not offered")
             log("${chosen.id} (${"%.2f".format(decision.confidence)}): ${chosen.description}")
 
-            if (chosen.id == STUCK) return end(false, "no way forward from this screen")
+            // A payment, booking or account change is the user's to confirm, whatever the model wanted to tap.
+            if (decision.asksForCommitment >= COMMITMENT_LIMIT) {
+                log("stopped: this screen asks for a decision that is yours")
+                return Outcome(false, "the app is asking you to confirm something (a payment, a booking or an account change)", history, tokens, cost, needsUser = true)
+            }
+            if (chosen.id == STUCK) return end(false, NO_WAY_FORWARD)
             // A guess is not acted on, and a guessed "done" is not reported as success.
             if (decision.confidence < MIN_CONFIDENCE) return end(false, "unsure what to do next (wanted to: ${chosen.description})")
             if (chosen.id == DONE) return end(true, "task complete")
@@ -145,6 +158,8 @@ class Navigator(
             return out
         }
 
+        /** Why a run ended when the model chose "stuck". */
+        const val NO_WAY_FORWARD = "no way forward from this screen"
         const val DONE = "done"
         const val STUCK = "stuck"
         const val BACK = "back"
@@ -159,6 +174,9 @@ class Navigator(
 
         /** Below this the model is guessing; stop and say what it wanted rather than tap on a guess. */
         const val MIN_CONFIDENCE = 0.4
+
+        /** At or above this the screen is treated as asking for a commitment and the navigator hands back. */
+        const val COMMITMENT_LIMIT = 0.5
 
         /**
          * Elements that spend money, post, or end something are never offered to the model, whatever the task.

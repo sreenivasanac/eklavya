@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The whole palette; see DESIGN.md for when each is used. -->
+<resources>
+    <color name="bg">#101214</color>
+    <color name="surface">#1A1D21</color>
+    <color name="divider">#2A2E33</color>
+    <color name="text">#F2F0EA</color>
+    <color name="muted">#9BA1A6</color>
+    <color name="accent">#F2A93B</color>
+    <color name="accent_pressed">#D8922A</color>
+    <color name="on_accent">#17130A</color>
+    <color name="danger">#EF7A70</color>
+    <color name="overlay_bg">#F01A1D21</color>
+</resources>

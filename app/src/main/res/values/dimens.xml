@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One spacing scale on an 8dp grid, one radius scale. -->
+<resources>
+    <dimen name="space_1">8dp</dimen>
+    <dimen name="space_2">16dp</dimen>
+    <dimen name="space_3">24dp</dimen>
+    <dimen name="space_5">40dp</dimen>
+    <dimen name="touch">56dp</dimen>
+    <dimen name="row">56dp</dimen>
+    <dimen name="radius">12dp</dimen>
+    <dimen name="radius_pill">22dp</dimen>
+    <dimen name="overlay_top">64dp</dimen>
+</resources>

@@ -24,18 +24,24 @@ class JevDecider(
             .put("type", "choice")
             .put("instructions", Decider.INSTRUCTIONS)
             .put("criteria", JSONObject(request.options))
-        val body = JSONObject().put("model", model).put("state", state).put("questions", JSONObject().put(QUESTION, question))
+        // Both questions are answered against the same state in one round trip.
+        val commitment = JSONObject().put("type", "noul").put("instructions", Decider.COMMITMENT)
+        val questions = JSONObject().put(QUESTION, question).put(COMMITMENT, commitment)
+        val body = JSONObject().put("model", model).put("state", state).put("questions", questions)
 
         val reply = postJson(endpoint, apiKey, body)
         val answer = reply.getJSONObject("answers").getJSONObject(QUESTION)
         val tokens = reply.optJSONObject("usage")?.optInt("input_tokens") ?: 0
-        return Decision(answer.getString("choice"), answer.optDouble("confidence", 1.0), tokens, tokens * USD_PER_INPUT_TOKEN)
+        // No answer to the safety question is treated as a yes: the navigator hands back rather than guess.
+        val asks = reply.getJSONObject("answers").optJSONObject(COMMITMENT)?.optDouble("noul", 1.0) ?: 1.0
+        return Decision(answer.getString("choice"), answer.optDouble("confidence", 1.0), tokens, tokens * USD_PER_INPUT_TOKEN, asks)
     }
 
     companion object {
         const val ENDPOINT = "https://api.typesafe.ai/v1/systemone"
         const val MODEL = "jev-latest"
         private const val QUESTION = "next"
+        private const val COMMITMENT = "commitment"
 
         /** Jev bills input tokens only: $0.042 per million (docs.typesafe.ai/models, November 2026). */
         const val USD_PER_INPUT_TOKEN = 0.042 / 1_000_000
@@ -66,13 +72,15 @@ class ChatDecider(
         }
         val schema = JSONObject()
             .put("type", "object")
-            .put("properties", JSONObject().put("action", JSONObject().put("type", "string").put("enum", JSONArray(request.options.keys))))
-            .put("required", JSONArray(listOf("action")))
+            .put("properties", JSONObject()
+                .put("asks_for_commitment", JSONObject().put("type", "boolean").put("description", Decider.COMMITMENT))
+                .put("action", JSONObject().put("type", "string").put("enum", JSONArray(request.options.keys))))
+            .put("required", JSONArray(listOf("asks_for_commitment", "action")))
             .put("additionalProperties", false)
         val body = JSONObject()
             .put("model", model)
             .put("messages", JSONArray()
-                .put(JSONObject().put("role", "system").put("content", Decider.INSTRUCTIONS + " Reply with JSON: {\"action\": \"<id>\"}."))
+                .put(JSONObject().put("role", "system").put("content", Decider.INSTRUCTIONS + " Reply with JSON: {\"asks_for_commitment\": true or false, \"action\": \"<id>\"}."))
                 .put(JSONObject().put("role", "user").put("content", user)))
             .put("response_format", JSONObject().put("type", "json_schema")
                 .put("json_schema", JSONObject().put("name", "next_action").put("strict", true).put("schema", schema)))
@@ -83,7 +91,9 @@ class ChatDecider(
         val input = usage?.optInt("prompt_tokens") ?: 0
         val output = usage?.optInt("completion_tokens") ?: 0
         // Chat models give no calibrated probability; the schema guarantees a valid id, nothing more.
-        return Decision(JSONObject(content).getString("action"), 1.0, input, (input * usdPerMInput + output * usdPerMOutput) / 1_000_000)
+        val answer = JSONObject(content)
+        val asks = if (answer.optBoolean("asks_for_commitment", true)) 1.0 else 0.0
+        return Decision(answer.getString("action"), 1.0, input, (input * usdPerMInput + output * usdPerMOutput) / 1_000_000, asks)
     }
 }
 

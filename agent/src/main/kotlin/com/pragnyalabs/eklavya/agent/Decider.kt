@@ -20,6 +20,8 @@ class Decision(
     val confidence: Double,
     val inputTokens: Int = 0,
     val costUsd: Double = 0.0,
+    /** 0..1: how likely the screen is asking the user to commit to something (see [Decider.COMMITMENT]). */
+    val asksForCommitment: Double = 0.0,
 )
 
 /**
@@ -31,6 +33,16 @@ fun interface Decider {
     fun decide(request: DecisionRequest): Decision
 
     companion object {
+        /**
+         * Asked alongside every decision. A keyword list on button labels cannot see that a plain "OK" sits
+         * in a payment dialog; the model reads the whole screen. Leaving or discarding something unfinished
+         * is deliberately not on the list: backing out is how the navigator recovers.
+         */
+        const val COMMITMENT =
+            "Is the current screen asking the user to confirm or carry out a purchase, a payment, a subscription or " +
+                "upgrade, a booking or reservation, a change to their account or membership, signing out, or " +
+                "sharing or posting something?"
+
         /** The question put to every model, so they are compared on the same words. */
         const val INSTRUCTIONS =
             "You operate a phone app for a user by choosing one action at a time. You are given the task, notes about " +

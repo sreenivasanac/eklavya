@@ -10,6 +10,10 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // sherpa-onnx (the wake word) publishes its Android library only through JitPack.
+        maven("https://jitpack.io") {
+            content { includeGroupByRegex("""com\.github\.k2-fsa.*""") }
+        }
     }
 }
 rootProject.name = "eklavya"
