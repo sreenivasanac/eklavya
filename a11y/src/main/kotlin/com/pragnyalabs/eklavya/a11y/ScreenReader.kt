@@ -57,18 +57,33 @@ class ScreenReader(private val service: AccessibilityService) {
     fun live(e: Element): AccessibilityNodeInfo? {
         var cur = service.windows.firstOrNull { it.id == e.windowId }?.root ?: return null
         for (i in e.node.path) cur = cur.getChild(i) ?: return null
-        val same = cur.className?.toString() == e.node.className && simpleId(cur) == e.node.viewId
+        // Rows of a list share a class and an id, so the words on the element are compared too: after a
+        // scroll the same place in the tree can hold a different row.
+        // ponytail: in a window with more than MAX_NODES nodes the first read may have cut this element's subtree
+        // short, and it will then never match here (the action is refused, nothing wrong is tapped). Record
+        // where a read was cut if such screens turn up.
+        val now = convert(cur, e.node.path, intArrayOf(MAX_NODES), STALE_CHECK_DEPTH) ?: return null
+        val same = now.className == e.node.className && now.viewId == e.node.viewId &&
+            words(now, STALE_CHECK_DEPTH) == words(e.node, STALE_CHECK_DEPTH)
         return if (same) cur else null
     }
 
-    private fun convert(n: AccessibilityNodeInfo, path: List<Int>, budget: IntArray): UiNode? {
+    /** The text and descriptions of [n] and its descendants down to [depth] levels, in tree order. */
+    private fun words(n: UiNode, depth: Int): List<String?> =
+        listOf(n.text, n.contentDescription) + if (depth > 0) n.children.flatMap { words(it, depth - 1) } else emptyList()
+
+    private fun convert(n: AccessibilityNodeInfo, path: List<Int>, budget: IntArray, depth: Int = Int.MAX_VALUE): UiNode? {
         if (budget[0]-- <= 0 || !n.isVisibleToUser) return null
         val r = Rect().also(n::getBoundsInScreen)
         val children = ArrayList<UiNode>()
-        for (i in 0 until n.childCount) {
-            val child = n.getChild(i) ?: continue
-            // The path keeps the real child index even when earlier children are skipped.
-            convert(child, path + i, budget)?.let(children::add)
+        if (depth > 0) {
+            for (i in 0 until n.childCount) {
+                // Each getChild is a call into another process; stop asking once the budget is spent.
+                if (budget[0] <= 0) break
+                val child = n.getChild(i) ?: continue
+                // The path keeps the real child index even when earlier children are skipped.
+                convert(child, path + i, budget, depth - 1)?.let(children::add)
+            }
         }
         @Suppress("DEPRECATION") // isChecked: the three-state replacement needs API 36.
         return UiNode(
@@ -100,5 +115,8 @@ class ScreenReader(private val service: AccessibilityService) {
     private companion object {
         /** Upper bound on nodes copied per window, so a huge or cyclic tree cannot stall a read. */
         const val MAX_NODES = 4000
+
+        /** How far below an element its words are compared to tell whether it is still the same element. */
+        const val STALE_CHECK_DEPTH = 3
     }
 }

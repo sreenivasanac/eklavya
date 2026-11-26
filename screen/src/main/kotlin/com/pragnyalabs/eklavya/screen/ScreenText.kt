@@ -95,7 +95,7 @@ class ScreenText(val text: String, val elements: List<Element>, val packageName:
                     if (label == null && (n.clickable || n.editable || n.checkable)) {
                         // A button made of an icon and separate text views: its label is the text inside it.
                         val parts = ArrayList<String>()
-                        for (c in n.children) gather(c, covers, screen, parts, absorbed)
+                        for (c in n.children) gather(c, coversFor(n, c, covers, blockers), screen, parts, absorbed, blockers)
                         label = parts.joinToString(" ").ifEmpty { null }
                     }
                     // Icon buttons often have no text at all; the developer's id ("toolbarBackButton") still says what it is.
@@ -104,13 +104,16 @@ class ScreenText(val text: String, val elements: List<Element>, val packageName:
                     out.add(windowId to (n to normalize(own)))
                 }
             }
-            for (c in n.children) {
-                // A sibling drawn after this child takes the touches wherever it has something clickable.
-                val onTop = n.children
-                    .filter { it !== c && it.drawingOrder > c.drawingOrder }
-                    .flatMap { touchBlockers(it, blockers) }
-                collect(c, windowId, if (onTop.isEmpty()) covers else covers + onTop, screen, out, absorbed, blockers)
-            }
+            for (c in n.children) collect(c, windowId, coversFor(n, c, covers, blockers), screen, out, absorbed, blockers)
+        }
+
+        /** What hides [child]: everything that hides its [parent], plus siblings drawn after it. */
+        private fun coversFor(parent: UiNode, child: UiNode, covers: List<Bounds>, memo: IdentityHashMap<UiNode, List<Bounds>>): List<Bounds> {
+            // A sibling drawn after this child takes the touches wherever it has something clickable.
+            val onTop = parent.children
+                .filter { it !== child && it.drawingOrder > child.drawingOrder }
+                .flatMap { touchBlockers(it, memo) }
+            return if (onTop.isEmpty()) covers else covers + onTop
         }
 
         /** The rectangles in which [n]'s subtree swallows touches: its own bounds if clickable, else its children's. */
@@ -124,7 +127,14 @@ class ScreenText(val text: String, val elements: List<Element>, val packageName:
             }
 
         /** Collects the text of non-actionable descendants (not crossing actionable ones) and marks them used. */
-        private fun gather(n: UiNode, covers: List<Bounds>, screen: Screen, parts: MutableList<String>, absorbed: MutableSet<UiNode>) {
+        private fun gather(
+            n: UiNode,
+            covers: List<Bounds>,
+            screen: Screen,
+            parts: MutableList<String>,
+            absorbed: MutableSet<UiNode>,
+            blockers: IdentityHashMap<UiNode, List<Bounds>>,
+        ) {
             if (n.actionable) return
             if (visible(n, covers, screen)) {
                 ownText(n)?.let {
@@ -132,7 +142,7 @@ class ScreenText(val text: String, val elements: List<Element>, val packageName:
                     absorbed.add(n)
                 }
             }
-            for (c in n.children) gather(c, covers, screen, parts, absorbed)
+            for (c in n.children) gather(c, coversFor(n, c, covers, blockers), screen, parts, absorbed, blockers)
         }
 
         private fun ownText(n: UiNode): String? =
