@@ -53,7 +53,40 @@ export ANDROID_HOME=/opt/homebrew/share/android-commandlinetools
   keeps running otherwise.
 - UI changes follow `DESIGN.md`.
 
+## Camera and rep counting
+
+- The counter and form rules are plain Kotlin in `motion/` and are tuned on recorded poses, not on the phone:
+  `./gradlew :motion:replay -Pposes=<folder>` prints the count and cues for every recording in a folder.
+  A recording is made from a video with `tools/pose_fixture.py` (MediaPipe in Python, the pose model in
+  `app/src/main/assets`; `uv run --python 3.12 --with mediapipe --with opencv-python-headless python tools/pose_fixture.py MODEL CLIPS OUT`), one
+  line per frame: `t_ms` then 33 `x y visibility` triples, x multiplied by width/height. Restart tracking
+  after five frames with the shoulders below the hips, as `SetWatcher` does, or the recording will not match
+  what the phone sees.
+- On the phone, `watchfile 'squat=clip.mp4'` runs a video from the app's files folder through the phone's pose
+  model and the tracker (a session must be running). Re-encode the clip first with every frame a key frame
+  (`ffmpeg -i in.mp4 -vf scale=-2:960 -g 1 -an out.mp4`), or reading it takes minutes. `watch squat` uses the
+  camera and needs the camera permission granted before the session starts.
+- The phone speaks counts aloud, and the coach's voice and 24GO's videos play aloud too. Before a test while
+  the owner is asleep or in a meeting: `adb shell cmd audio adj-mute 3` (media) and note then zero the
+  assistant stream (`adb shell cmd audio get-stream-volume 11`, `adb shell cmd audio set-volume 11 0`).
+  Check with `adb shell cmd audio is-stream-mute 3` and `get-stream-volume 11`: on 2026-11-26
+  `cmd media_session volume --set 0` printed as if it worked and changed nothing, and a night of tests was
+  audible. Afterwards `adj-unmute 3` and set stream 11 back.
+- `tools/squat_chart.py` draws the README's and the site's squat-depth chart from a recording. It carries a
+  copy of the counter and fails if its count differs from the one given, so redraw it when the counter changes.
+- The thresholds in `SetTracker` and `Exercise` are tuning values from 32 recorded sets of four people. When
+  a real set is miscounted or gets a wrong cue, record it, add it under `motion/src/test/resources/poses/`
+  with the right answer, and change the value there.
+- A word said straight after the wake phrase is only heard because the last 2.5 seconds of audio are sent
+  with it (`CoachService.PRE_ROLL_FRAMES`). Test new requests with clips that do not pause after "Hey Drona".
+
 ## Known gaps
+
+- The camera path has never seen a live person: only recorded sets (as poses on a laptop, and three videos
+  through the phone's pose model) and an empty room through the phone's camera.
+- The coach's voice and the phone's counting voice are two different voices.
+- Only squats, bicep curls and shoulder presses are counted. Form limits are the same for every body and
+  every camera angle; a phone that looks up or down at the user shifts the squat-depth reading.
 
 - Two guards keep the navigator away from commitments: an English keyword list on button labels
   (`Navigator.RISKY`) and a model-judged question asked with every decision (`Decider.COMMITMENT`).

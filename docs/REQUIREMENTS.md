@@ -63,5 +63,40 @@ Cloud only: the owner dropped on-device models, since 24GO's pages and videos ne
 
 - 24GO's terms on automation have not been read.
 - Voice is untested with a real voice, with earbuds and in a gym. With recordings: about 12 s from the wake phrase to the video.
-- The coach has one tool. Planning, set logging (Hevy) and the 24GO exercise catalogue are next.
+- The coach has three tools (show a demo, count a set, report on the last set). Planning, set logging
+  (Hevy) and the 24GO exercise catalogue are next.
+- Camera counting has not seen a live person; see "Camera" below for what was and was not tested.
 - Hevy has not been driven or called.
+
+## Camera: rep counting and form (decided and built 2026-11-26)
+
+- **Pose on the phone.** MediaPipe Pose Landmarker, "full" model, through `tasks-vision` 1.2.2 on the graphics
+  chip with a fall-back to the processor. Measured on the Pixel 7a: about 37 ms a frame, about 21 frames a
+  second from the front camera with another app in front. No picture is stored or sent.
+- **The exercise is told, not recognised.** "Count my squats" names it; recognising it from the picture would
+  add a model and a way to be wrong for nothing.
+- **One number per exercise, and its turning points.** Squat: hip drop as a share of standing hip height.
+  Curl: elbow bend in degrees. Press: wrist height above the shoulders in torso lengths. A rep is a rise of
+  at least a minimum size followed by a fall of 60% of that rise, or of a usual rep when the rise was larger
+  (so the first rep after picking up the weights counts). Fixed "rest" and "bottom" levels were
+  tried first and dropped: picking up the dumbbells moved the rest level and the count stopped.
+- **Form rules are geometry, with limits set from recordings.** Each fault is one inequality on joint
+  positions at the rep's far point or across the rep (the list is in the README). A rule runs only from the
+  view that can see it and when its joints are clearly visible.
+- **Cues are rationed.** Two reps running before anything is said, one cue per three reps, the same cue not
+  again for six, and one line after the set. The wording is fixed in code.
+- **Counts are spoken by the phone's own speech engine**, so nothing is billed during a set, and the voice
+  exchange closes four seconds after counting starts. The cost of that: two different voices.
+- **Sets end by themselves**: eight seconds after the last rep; three seconds after the user leaves the
+  picture, once a rep has been counted; or after a minute with no rep. Before the first rep, leaving the
+  picture does not end the set: people step out to fetch a weight.
+
+Tried and not chosen: sending frames to a vision model in the cloud (cost per set, delay on every rep, and the
+gym's network); a learned rep counter (nothing to train it on, and it cannot say why it counted).
+
+Not built yet, in the order they seem worth doing:
+
+1. Try it with a person, and adjust the limits to real sets (the recordings are of four people).
+2. Take the cue wording from the exercise's own form notes in 24GO, chosen by the decision model.
+3. Push-ups and lunges; a barbell hiding the wrists or hips.
+4. Write counted sets to Hevy.

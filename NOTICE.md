@@ -10,6 +10,16 @@ The test fixtures under `screen/src/test/resources/24go/` are screen dumps of
 the 24GO app with personal details replaced. They are included only to test
 this project's code; 24GO and its content belong to 24 Hour Fitness.
 
+## Rep counting
+
+- `app/src/main/assets/pose_landmarker_full.task` is Google's MediaPipe Pose Landmarker model ("full"),
+  unmodified, from [litert-community/MediaPipe-PoseLandmarker-Full](https://huggingface.co/litert-community/MediaPipe-PoseLandmarker-Full)
+  (Apache License 2.0). The app links MediaPipe Tasks Vision and AndroidX CameraX (both Apache License 2.0).
+- The pose recordings under `motion/src/test/resources/poses/` are joint positions only, with no picture,
+  computed with that model from clips in the dataset
+  [Ashleshpai12/Exercise_Dataset_with_different_organizations](https://huggingface.co/datasets/Ashleshpai12/Exercise_Dataset_with_different_organizations)
+  (published under the MIT License). The file names keep the dataset's subject number and its good/bad label.
+
 ## Wake word
 
 - The keyword-spotting model under `app/src/main/assets/kws/` (encoder, decoder, joiner, tokens) is

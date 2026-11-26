@@ -58,6 +58,7 @@ class StatusOverlay(private val service: AccessibilityService) {
             state == CoachService.State.WAITING -> service.getString(R.string.overlay_waiting, WakeWord.PHRASE) to R.color.muted
             state == CoachService.State.CONNECTING -> service.getString(R.string.overlay_connecting) to R.color.muted
             state == CoachService.State.WORKING -> service.getString(R.string.overlay_working) to R.color.accent
+            state == CoachService.State.COUNTING -> service.getString(R.string.overlay_counting) to R.color.accent
             else -> service.getString(R.string.overlay_talking) to R.color.accent
         }
         // The dot's colour is the signal: grey while idle, amber while the coach is with you.

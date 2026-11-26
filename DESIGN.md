@@ -45,6 +45,10 @@ buttons and a full round for the pill.
 - The session's state is the largest text on the screen (display role); the app's name is a small label above it.
 - Once both keys are saved the key fields fold away behind "Change"; a saved thing is said once.
 - A quiet button is amber only while it can do something; with nothing to save it is grey.
+- A setup row that is optional says what it is for in the label itself ("Camera, to count reps") and does
+  not block the session.
+- While a set is being counted the pill says "Counting" with the amber dot; the counts themselves are
+  spoken, not shown, because the user is mid-rep and not looking.
 
 ## Never
 

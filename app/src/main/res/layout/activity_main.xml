@@ -119,6 +119,39 @@
 
         <View style="@style/Divider" />
 
+        <!-- Optional: a session runs without it, but cannot count reps. -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/row"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                style="@style/Text.Body"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/setup_camera" />
+
+            <TextView
+                android:id="@+id/camera_state"
+                style="@style/Text.Body"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/state_allowed"
+                android:textColor="@color/muted" />
+
+            <Button
+                android:id="@+id/camera_action"
+                style="@style/Button.Quiet"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/touch"
+                android:text="@string/action_allow" />
+        </LinearLayout>
+
+        <View style="@style/Divider" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

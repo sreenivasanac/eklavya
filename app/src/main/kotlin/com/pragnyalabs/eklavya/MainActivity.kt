@@ -45,6 +45,9 @@ class MainActivity : Activity() {
             // Notifications are asked for in the same breath: the session shows one while it listens.
             requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.POST_NOTIFICATIONS), 0)
         }
+        findViewById<Button>(R.id.camera_action).setOnClickListener {
+            requestPermissions(arrayOf(Manifest.permission.CAMERA), 0)
+        }
         // "Change" opens the key fields; the same button then reads "Cancel" and closes them unchanged.
         findViewById<Button>(R.id.keys_action).setOnClickListener {
             changingKeys = !changingKeys
@@ -84,7 +87,12 @@ class MainActivity : Activity() {
         super.onStop()
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) = refresh()
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        // A running session declared what it may use when it started. Starting it again while this screen is in
+        // front lets it add the camera, so a permission granted mid-session works without ending the session.
+        if (CoachService.instance != null) startForegroundService(Intent(this, CoachService::class.java))
+        refresh()
+    }
 
     /** Stores a key if one was typed, then empties the field: a saved key is never shown again. */
     private fun save(field: Int, name: String) {
@@ -105,6 +113,7 @@ class MainActivity : Activity() {
 
         row(R.id.screen_state, R.id.screen_action, screenOn)
         row(R.id.mic_state, R.id.mic_action, micOn)
+        row(R.id.camera_state, R.id.camera_action, checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
         findViewById<TextView>(R.id.keys_state).setText(if (keys) R.string.state_saved else R.string.state_missing_keys)
         // With both keys saved, the fields fold away behind "Change".
         findViewById<Button>(R.id.keys_action).apply {
@@ -122,6 +131,7 @@ class MainActivity : Activity() {
         val waiting = running && CoachService.current == CoachService.State.WAITING
         status.text = when {
             waiting -> getString(R.string.status_waiting, WakeWord.PHRASE)
+            running && CoachService.current == CoachService.State.COUNTING -> getString(R.string.status_counting)
             running -> getString(R.string.status_talking)
             !ready -> getString(R.string.status_blocked)
             else -> getString(R.string.status_off)

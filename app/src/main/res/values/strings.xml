@@ -8,6 +8,7 @@
     <string name="status_waiting">Listening for “%1$s”</string>
     <string name="status_waiting_detail">Nothing is sent until it hears that.</string>
     <string name="status_talking">In conversation</string>
+    <string name="status_counting">Counting your set</string>
     <string name="status_blocked">Not ready</string>
     <string name="status_blocked_detail">Finish the steps below to start.</string>
     <string name="start_session">Start session</string>
@@ -15,6 +16,7 @@
     <string name="section_setup">Before you start</string>
     <string name="setup_screen_control">Screen control</string>
     <string name="setup_microphone">Microphone</string>
+    <string name="setup_camera">Camera, to count reps</string>
     <string name="setup_keys">API keys</string>
     <string name="state_on">On</string>
     <string name="state_allowed">Allowed</string>
@@ -30,13 +32,14 @@
     <string name="key_hint_empty">Paste key</string>
     <string name="key_hint_saved">Saved. Paste to replace.</string>
     <string name="save_keys">Save keys</string>
-    <string name="keys_caption">Keys stay on this phone and are sent only to the service they belong to. A one-hour workout costs roughly 50 cents to a dollar in voice time.</string>
+    <string name="keys_caption">Keys stay on this phone and are sent only to the service they belong to. Camera pictures are used on the phone and never stored or sent. A one-hour workout costs roughly 50 cents to a dollar in voice time.</string>
 
     <!-- Overlay and notification -->
     <string name="overlay_waiting">Say “%1$s”</string>
     <string name="overlay_connecting">Connecting</string>
     <string name="overlay_talking">Listening</string>
     <string name="overlay_working">Working on it</string>
+    <string name="overlay_counting">Counting</string>
     <string name="error_no_voice_key">Add your OpenAI key in Eklavya</string>
     <string name="channel_session">Workout session</string>
     <string name="notification_title">Eklavya is on</string>

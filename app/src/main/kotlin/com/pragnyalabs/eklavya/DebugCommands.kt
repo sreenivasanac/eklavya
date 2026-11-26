@@ -11,6 +11,7 @@ import com.pragnyalabs.eklavya.agent.AppNotes
 import com.pragnyalabs.eklavya.agent.Goal
 import com.pragnyalabs.eklavya.agent.Navigator
 import com.pragnyalabs.eklavya.a11y.ScreenDriver
+import com.pragnyalabs.eklavya.motion.Exercise
 import com.pragnyalabs.eklavya.screen.ScreenText
 import com.pragnyalabs.eklavya.voice.CoachService
 import java.io.File
@@ -26,7 +27,8 @@ import java.util.concurrent.ExecutorService
  *
  * Commands: dump, tap n, text n arg, submit n, scroll n [arg=back], back, open arg, demo arg,
  * nav arg (an exercise name: the decision model finds and plays its demo), set arg (name=value, see Settings),
- * hear arg (a recording to play into the running voice session).
+ * hear arg (a recording to play into the running voice session), watch arg (an exercise: count a set through the
+ * camera), watchfile arg (exercise=video file in the app's files folder: count the set in that video).
  */
 object DebugCommands {
     const val ACTION = "com.pragnyalabs.eklavya.DEBUG"
@@ -60,6 +62,8 @@ object DebugCommands {
                             // in the app's files folder. This is how the voice path is tested without a person.
                             "hear" -> CoachService.instance?.let { it.hear(File(service.filesDir, arg).inputStream()); "playing $arg into the session" }
                                 ?: "no session is running; start one in the app first"
+                            // Counts a set as the coach's tool would, from the camera or from a video file.
+                            "watch", "watchfile" -> watch(service, arg, fromFile = cmd == "watchfile")
                             // The value may be a key: say which setting changed, never what it was set to.
                             "set" -> {
                                 Settings.set(service, arg.substringBefore('='), arg.substringAfter('=', ""))
@@ -77,6 +81,13 @@ object DebugCommands {
         }
         service.registerReceiver(receiver, IntentFilter(ACTION), SENDER_PERMISSION, null, Context.RECEIVER_EXPORTED)
         return receiver
+    }
+
+    private fun watch(context: Context, arg: String, fromFile: Boolean): String {
+        val exercise = Exercise.named(arg.substringBefore('=')) ?: return "cannot count \"${arg.substringBefore('=')}\""
+        val session = CoachService.instance ?: return "no session is running; start one in the app first"
+        val file = if (fromFile) File(context.filesDir, arg.substringAfter('=')) else null
+        return session.watch(exercise, file) ?: "watching ${exercise.plural}"
     }
 
     /** Asks the configured decision model to find and play the demo for [exercise] in 24GO. */

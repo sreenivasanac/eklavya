@@ -21,16 +21,23 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.os.SystemClock
+import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import com.pragnyalabs.eklavya.BuildConfig
 import com.pragnyalabs.eklavya.EklavyaService
 import com.pragnyalabs.eklavya.MainActivity
 import com.pragnyalabs.eklavya.R
 import com.pragnyalabs.eklavya.Settings
+import com.pragnyalabs.eklavya.camera.SetWatcher
+import com.pragnyalabs.eklavya.motion.Exercise
+import com.pragnyalabs.eklavya.motion.SetReport
 import org.json.JSONObject
+import java.io.File
 import java.io.InputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.util.Locale
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.atomic.AtomicInteger
@@ -45,7 +52,7 @@ import kotlin.math.abs
  * anyone speaking, because the voice session is billed for every second it is open.
  */
 class CoachService : Service() {
-    enum class State { WAITING, CONNECTING, TALKING, WORKING }
+    enum class State { WAITING, CONNECTING, TALKING, WORKING, COUNTING }
 
     private val main = Handler(Looper.getMainLooper())
     private val tools = Executors.newSingleThreadExecutor()
@@ -60,6 +67,21 @@ class CoachService : Service() {
     @Volatile private var headphones = false
     @Volatile private var injected: InputStream? = null
 
+    /** When set, the exchange closes at this time whatever is being said: a set is being counted. */
+    @Volatile private var closeAt = 0L
+
+    /** What the voice exchange is doing; [current] also knows about a set being counted. */
+    @Volatile private var exchange = State.WAITING
+
+    /** The phone's speech engine, for what is said during a set (counts and cues): no voice session is open then. */
+    @Volatile private var tts: TextToSpeech? = null
+    @Volatile private var watcher: SetWatcher? = null
+    @Volatile private var cameraAllowed = false
+
+    /** The last set the camera counted, for when the user asks the coach about it. */
+    @Volatile var lastSet: SetReport? = null
+        private set
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -67,12 +89,17 @@ class CoachService : Service() {
             stopSelf()
             return START_NOT_STICKY
         }
-        startForeground(NOTIFICATION_ID, notification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE)
+        // Android lets a background service use the camera only if it said so when it started, and it may
+        // say so only once the permission is granted.
+        cameraAllowed = checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+        startForeground(NOTIFICATION_ID, notification(),
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE or if (cameraAllowed) ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA else 0)
         if (!running) {
             running = true
             instance = this
             thread(name = "coach-listen") { listen() }
             thread(name = "coach-speak") { speak() }
+            startSpeechEngine()
         }
         return START_NOT_STICKY
     }
@@ -81,6 +108,8 @@ class CoachService : Service() {
         running = false
         instance = null
         session?.close()
+        watcher?.stop()
+        tts?.shutdown()
         tools.shutdownNow()
         publish(null, null)
         super.onDestroy()
@@ -89,6 +118,58 @@ class CoachService : Service() {
     /** Debug aid: plays a 16 kHz mono PCM16 stream into the session as if it came from the microphone. */
     fun hear(audio: InputStream) {
         injected = audio
+    }
+
+    // --- watching a set --------------------------------------------------------------------------------
+
+    /**
+     * Starts counting a set of [exercise] through the front camera (or, for a test, from a video [file]).
+     * Returns null once it is watching, or the reason it cannot.
+     */
+    fun watch(exercise: Exercise, file: File? = null): String? {
+        if (file == null && checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
+            return "the camera is not allowed yet: allow it in the Eklavya app, then start the session again"
+        if (file == null && !cameraAllowed)
+            return "the camera was allowed after this session started: open the Eklavya app once, or end the session and start it again"
+        watcher?.stop()
+        lateinit var mine: SetWatcher
+        mine = SetWatcher(this, exercise, ::say) { report ->
+            // A watch that saw no reps (nobody in view, or stopped at once) does not replace the last real set.
+            if (report.reps > 0) lastSet = report
+            if (watcher === mine) watcher = null
+            publish(null, null)
+        }
+        watcher = mine
+        if (file != null) mine.playFile(file) else main.post { mine.startCamera() }
+        publish(null, null)
+        return null
+    }
+
+    private fun startSpeechEngine() {
+        lateinit var engine: TextToSpeech
+        engine = TextToSpeech(this) { status ->
+            if (status != TextToSpeech.SUCCESS) {
+                Log.e(TAG, "speech engine failed to start: $status")
+                return@TextToSpeech
+            }
+            engine.language = Locale.US
+            engine.setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ASSISTANT)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build())
+            // On the phone's speaker the microphone hears the counting; keep it out of an open voice exchange.
+            engine.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+                override fun onStart(id: String?) { lastCoachSound = SystemClock.uptimeMillis() }
+                override fun onDone(id: String?) { lastCoachSound = SystemClock.uptimeMillis() }
+                @Deprecated("Deprecated in Java")
+                override fun onError(id: String?) = Unit
+            })
+            tts = engine
+        }
+    }
+
+    /** Says a short line with the phone's own voice. */
+    private fun say(text: String) {
+        Log.i(TAG, "camera: says: $text")
+        tts?.speak(text, TextToSpeech.QUEUE_ADD, null, text) ?: Log.e(TAG, "speech engine not ready")
     }
 
     // --- listening -------------------------------------------------------------------------------------
@@ -102,6 +183,7 @@ class CoachService : Service() {
         val frame = ShortArray(FRAME)
         val bytes = ByteArray(FRAME * 2)
         val silence = ByteArray(FRAME * 2)
+        val recent = ArrayDeque<ByteArray>()
         try {
             mic.startRecording()
             publish(State.WAITING, null)
@@ -117,7 +199,16 @@ class CoachService : Service() {
                 if (count == 0) continue
                 val live = session
                 if (live == null) {
-                    if (wake.heard(frame, count)) begin()
+                    ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().put(frame, 0, count)
+                    recent.addLast(bytes.copyOf(count * 2))
+                    if (recent.size > PRE_ROLL_FRAMES) recent.removeFirst()
+                    if (wake.heard(frame, count)) {
+                        begin()
+                        // The wake phrase is recognised a moment after it is said, and people do not pause after
+                        // it: without the last few seconds, "Hey Drona, count my squats" arrives as "my squats".
+                        session?.let { started -> recent.forEach { started.sendAudio(it, it.size) } }
+                        recent.clear()
+                    }
                 } else {
                     // On the phone's own speaker the microphone hears the coach; do not send the coach back to itself.
                     val echo = !headphones && SystemClock.uptimeMillis() - lastCoachSound < ECHO_GUARD_MS
@@ -162,6 +253,7 @@ class CoachService : Service() {
         ToneGenerator(AudioManager.STREAM_MUSIC, 70).startTone(ToneGenerator.TONE_PROP_ACK, 150)
         headphones = getSystemService(AudioManager::class.java).getDevices(AudioManager.GET_DEVICES_OUTPUTS).any { it.type in HEADPHONE_TYPES }
         exchangeStart = SystemClock.uptimeMillis()
+        closeAt = 0
         lastActivity = exchangeStart
         publish(State.CONNECTING, null)
         // The listener needs the session it belongs to: a slow tool may finish after a newer exchange has begun.
@@ -198,6 +290,9 @@ class CoachService : Service() {
                         Log.i(TAG, "voice: tool result $result")
                         val current = session === live
                         if (current) live.sendToolResult(callId, result)
+                        // Once a set is being counted the phone does the talking: leave the coach time for
+                        // "Go ahead" and close, so the exchange is not billed, or chatted over, for the whole set.
+                        if (current && result.optString("status") == "counting") closeAt = SystemClock.uptimeMillis() + GO_AHEAD_MS
                         if (current) lastActivity = SystemClock.uptimeMillis()
                         if (toolsRunning.decrementAndGet() == 0 && current) publish(State.TALKING, null)
                     }
@@ -225,7 +320,8 @@ class CoachService : Service() {
     private fun endIfQuiet(live: LiveSession) {
         val now = SystemClock.uptimeMillis()
         val quiet = toolsRunning.get() == 0 && now - lastActivity > QUIET_MS && now - lastCoachSound > QUIET_MS / 2
-        if (quiet || now - exchangeStart > MAX_EXCHANGE_MS) {
+        if (quiet || now - exchangeStart > MAX_EXCHANGE_MS || (closeAt != 0L && now > closeAt)) {
+            closeAt = 0
             lastActivity = now + CLOSE_GRACE_MS // do not ask twice while the server finishes up
             live.close()
         }
@@ -269,7 +365,9 @@ class CoachService : Service() {
 
     /** Tells the overlay and the app's screen what is going on. A null [state] keeps the current one. */
     private fun publish(state: State?, error: String?) {
-        if (state != null) current = state
+        if (state != null) exchange = state
+        // Between exchanges, a set being counted is the thing to show.
+        current = if (watcher != null && exchange == State.WAITING) State.COUNTING else exchange
         val shown = if (running) current else null
         main.post {
             EklavyaService.instance?.overlay?.show(shown, error)
@@ -299,9 +397,13 @@ class CoachService : Service() {
         /** 100 ms of audio per frame. */
         private const val FRAME = RATE / 10
 
+        /** How much audio from before the wake phrase was recognised goes to the coach: 2.5 seconds. */
+        private const val PRE_ROLL_FRAMES = 25
+
         /** An exchange ends after this long without speech from either side. */
         private const val QUIET_MS = 7_000L
         private const val CLOSE_GRACE_MS = 20_000L
+        private const val GO_AHEAD_MS = 4_000L
 
         /** No single exchange runs longer than this, whatever happens: the meter is running. */
         private const val MAX_EXCHANGE_MS = 180_000L

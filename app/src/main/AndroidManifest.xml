@@ -10,10 +10,21 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- Counting reps: the front camera, used on the phone only, and only while a set is being counted. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+    <!-- The permission alone would mark a back camera as required and hide the app from phones without one. -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.any" android:required="false" />
+
     <!-- Apps Eklavya opens by package name; Android hides other apps from us unless they are listed. -->
     <queries>
         <package android:name="io.a24go.android.dev" />
         <package android:name="com.hevy" />
+        <!-- The phone's own speech engine says the rep counts. -->
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
     </queries>
 
     <application
@@ -35,7 +46,7 @@
         <service
             android:name=".voice.CoachService"
             android:exported="false"
-            android:foregroundServiceType="microphone" />
+            android:foregroundServiceType="microphone|camera" />
 
         <service
             android:name=".EklavyaService"
