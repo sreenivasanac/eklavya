@@ -34,7 +34,7 @@ class ScreenReader(private val service: AccessibilityService) {
                     // Our own windows are not part of the screen being driven.
                     if (root.packageName == service.packageName) continue
                     val budget = intArrayOf(MAX_NODES)
-                    windows.add(UiWindow(w.id, bounds, convert(root, emptyList(), budget)))
+                    windows.add(UiWindow(w.id, bounds, convert(root, emptyList(), budget), packageName = root.packageName?.toString()))
                     front = root.packageName?.toString()
                 }
                 AccessibilityWindowInfo.TYPE_INPUT_METHOD -> {
@@ -68,9 +68,9 @@ class ScreenReader(private val service: AccessibilityService) {
         return if (same) cur else null
     }
 
-    /** The text and descriptions of [n] and its descendants down to [depth] levels, in tree order. */
+    /** The text, descriptions and hints of [n] and its descendants down to [depth] levels, in tree order. */
     private fun words(n: UiNode, depth: Int): List<String?> =
-        listOf(n.text, n.contentDescription) + if (depth > 0) n.children.flatMap { words(it, depth - 1) } else emptyList()
+        listOf(n.text, n.contentDescription, n.hint) + if (depth > 0) n.children.flatMap { words(it, depth - 1) } else emptyList()
 
     private fun convert(n: AccessibilityNodeInfo, path: List<Int>, budget: IntArray, depth: Int = Int.MAX_VALUE): UiNode? {
         if (budget[0]-- <= 0 || !n.isVisibleToUser) return null
@@ -90,7 +90,8 @@ class ScreenReader(private val service: AccessibilityService) {
             path = path,
             className = n.className?.toString(),
             // Never copy what is typed into a password field, whatever the system reports for it.
-            text = if (n.isPassword) null else n.text?.toString(),
+            // A field showing its hint reports the hint as its text; that is not something typed.
+            text = if (n.isPassword || n.isShowingHintText) null else n.text?.toString(),
             contentDescription = n.contentDescription?.toString(),
             hint = n.hintText?.toString(),
             viewId = simpleId(n),

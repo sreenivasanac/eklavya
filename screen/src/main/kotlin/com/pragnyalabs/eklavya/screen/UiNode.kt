@@ -47,6 +47,8 @@ data class UiWindow(
     val root: UiNode?,
     /** False for windows that only hide what is under them (the keyboard): never listed, never tapped. */
     val readable: Boolean = true,
+    /** The app the window belongs to, when known. */
+    val packageName: String? = null,
 )
 
 /** Everything on the display at one moment. [windows] run from the bottom-most to the top-most. */

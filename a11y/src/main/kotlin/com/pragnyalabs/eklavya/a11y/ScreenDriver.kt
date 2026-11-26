@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.os.SystemClock
 import android.view.accessibility.AccessibilityNodeInfo
 import com.pragnyalabs.eklavya.screen.Element
+import com.pragnyalabs.eklavya.screen.ScreenControl
 import com.pragnyalabs.eklavya.screen.ScreenText
 
 /**
@@ -17,7 +18,7 @@ import com.pragnyalabs.eklavya.screen.ScreenText
  * waits for the screen to settle. All methods block, so call them from a worker thread, never the main thread.
  * The owning service must forward its accessibility events to [onEvent].
  */
-class ScreenDriver(private val service: AccessibilityService) {
+class ScreenDriver(private val service: AccessibilityService) : ScreenControl {
     private val reader = ScreenReader(service)
 
     @Volatile
@@ -28,7 +29,7 @@ class ScreenDriver(private val service: AccessibilityService) {
         lastEvent = SystemClock.uptimeMillis()
     }
 
-    fun read(): ScreenText = ScreenText.of(reader.read())
+    override fun read(onlyPackage: String?): ScreenText = ScreenText.of(reader.read(), onlyPackage)
 
     /**
      * Reads the screen until [pick] finds what it is looking for, or gives up after [timeoutMs]. Use it after an
@@ -44,7 +45,7 @@ class ScreenDriver(private val service: AccessibilityService) {
     }
 
     /** Taps [e], or the clickable row or card it sits in. */
-    fun tap(e: Element): Boolean = act {
+    override fun tap(e: Element): Boolean = act {
         var target: AccessibilityNodeInfo? = reader.live(e) ?: return@act false
         while (target != null && !target.isClickable) target = target.parent
         // Apps that draw their own widgets may ignore the click action; a real touch at the spot still works.
@@ -52,26 +53,26 @@ class ScreenDriver(private val service: AccessibilityService) {
     }
 
     /** Replaces the text of an editable element. */
-    fun setText(e: Element, text: String): Boolean = act {
+    override fun setText(e: Element, text: String): Boolean = act {
         val args = Bundle().apply { putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text) }
         reader.live(e)?.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args) == true
     }
 
     /** Presses the keyboard's enter / search / go key for an editable element. */
-    fun submit(e: Element): Boolean = act {
+    override fun submit(e: Element): Boolean = act {
         reader.live(e)?.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_IME_ENTER.id) == true
     }
 
     /** Scrolls a scrollable element one page; false when it is already at that end. */
-    fun scroll(e: Element, forward: Boolean): Boolean = act {
+    override fun scroll(e: Element, forward: Boolean): Boolean = act {
         val action = if (forward) AccessibilityNodeInfo.ACTION_SCROLL_FORWARD else AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD
         reader.live(e)?.performAction(action) == true
     }
 
-    fun back(): Boolean = act { service.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK) }
+    override fun back(): Boolean = act { service.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK) }
 
     /** Brings an installed app to the front; false when it is not installed or not visible to this app. */
-    fun openApp(packageName: String): Boolean = act {
+    override fun openApp(packageName: String): Boolean = act {
         val intent = service.packageManager.getLaunchIntentForPackage(packageName) ?: return@act false
         service.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         true

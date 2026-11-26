@@ -5,7 +5,11 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.SystemClock
 import android.util.Log
+import com.pragnyalabs.eklavya.agent.AppNotes
+import com.pragnyalabs.eklavya.agent.Goal
+import com.pragnyalabs.eklavya.agent.Navigator
 import com.pragnyalabs.eklavya.a11y.ScreenDriver
 import com.pragnyalabs.eklavya.screen.ScreenText
 import java.util.concurrent.ExecutorService
@@ -18,7 +22,8 @@ import java.util.concurrent.ExecutorService
  *     adb shell am broadcast ... --es cmd demo --es arg "squat"
  *     adb logcat -s Eklavya
  *
- * Commands: dump, tap n, text n arg, submit n, scroll n [arg=back], back, open arg, demo arg.
+ * Commands: dump, tap n, text n arg, submit n, scroll n [arg=back], back, open arg, demo arg,
+ * nav arg (an exercise name: the decision model finds and plays its demo), set arg (name=value, see Settings).
  */
 object DebugCommands {
     const val ACTION = "com.pragnyalabs.eklavya.DEBUG"
@@ -47,6 +52,12 @@ object DebugCommands {
                             "back" -> driver.back()
                             "open" -> driver.openApp(arg)
                             "demo" -> TwentyFourGo(driver) { Log.i(TAG, "demo: $it") }.playDemo(arg)
+                            "nav" -> navigate(service, driver, arg)
+                            // The value may be a key: say which setting changed, never what it was set to.
+                            "set" -> {
+                                Settings.set(service, arg.substringBefore('='), arg.substringAfter('=', ""))
+                                "set ${arg.substringBefore('=')}"
+                            }
                             else -> "unknown command"
                         }
                         result.toString().lines().forEach { Log.i(TAG, it) }
@@ -59,5 +70,15 @@ object DebugCommands {
         }
         service.registerReceiver(receiver, IntentFilter(ACTION), SENDER_PERMISSION, null, Context.RECEIVER_EXPORTED)
         return receiver
+    }
+
+    /** Asks the configured decision model to find and play the demo for [exercise] in 24GO. */
+    private fun navigate(context: Context, driver: ScreenDriver, exercise: String): String {
+        val decider = Settings.decider(context) ?: return "no decision model configured; send: set jev_key=..."
+        val goal = Goal(GymApps.TWENTY_FOUR_GO, "Play the demo video for the exercise \"$exercise\".", exercise, AppNotes.TWENTY_FOUR_GO, AppNotes.TWENTY_FOUR_GO_HOME)
+        val start = SystemClock.uptimeMillis()
+        val outcome = Navigator(driver, decider) { Log.i(TAG, "nav: $it") }.run(goal)
+        return "nav ${if (outcome.done) "done" else "stopped"} in ${SystemClock.uptimeMillis() - start} ms, " +
+            "${outcome.steps.size} steps, ${outcome.inputTokens} tokens, $${"%.5f".format(outcome.costUsd)}"
     }
 }

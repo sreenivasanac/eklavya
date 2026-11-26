@@ -25,7 +25,23 @@ export ANDROID_HOME=/opt/homebrew/share/android-commandlinetools
   An argument with spaces must be quoted inside the device shell: `adb shell "am broadcast ... --es arg 'front squat'"`.
 - New fixtures: `adb shell uiautomator dump`, then replace names and places before committing.
 
+## Decision models
+
+- `./gradlew :agent:eval` asks each configured model for the next step on the recorded screens. It reads
+  `TYPESAFE_API_KEY`, `OPENAI_API_KEY`, `XAI_API_KEY` (plus `EVAL_XAI_MODEL`) and `EVAL_LOCAL_URL` /
+  `EVAL_LOCAL_MODEL` from the environment. The owner's keys are in `~/tasks/fitness_coach_app_keys.txt`
+  (a name line, then a value line); load them into the environment without printing them.
+- A full eval run costs about $0.001 on Jev, $0.006 on gpt-5-nano and $0.02 on Grok 4.20.
+- On the phone: `set jev_key=...` once, then `nav <exercise>`. When a mistake shows up on the phone, dump
+  that screen, add it as a fixture and an eval case, and fix it there first.
+- Prefer a rule in `Navigator` over another sentence in `AppNotes` when the model cannot know the answer
+  from the screen (which exercise a playing video shows, for one).
+
 ## Known gaps
+
+- The navigator's risk filter is an English keyword list on button labels (`Navigator.RISKY`); a bare
+  "OK" or "Confirm" inside a purchase dialog would still be offered.
+- On screens it finds ambiguous Jev answers with low confidence and the navigator stops rather than acts.
 
 - `TwentyFourGo.playDemo` reports success when the player page is on screen. 24GO resumes a demo where it was
   left, so one watched to the end opens finished and paused; the route does not restart it yet.

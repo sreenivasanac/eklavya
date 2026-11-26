@@ -36,15 +36,18 @@ class ScreenText(val text: String, val elements: List<Element>, val packageName:
 
         /**
          * Lists what a person could see and touch on [screen]. Elements hidden under something drawn on
-         * top of them are left out, because a tap there would land on the thing on top.
+         * top of them are left out, because a tap there would land on the thing on top. With [onlyPackage],
+         * only that app's windows are listed.
          */
-        fun of(screen: Screen, maxElements: Int = 200): ScreenText {
+        fun of(screen: Screen, onlyPackage: String? = null, maxElements: Int = 200): ScreenText {
             val found = ArrayList<Pair<Int, Pair<UiNode, String>>>()
             val absorbed: MutableSet<UiNode> = Collections.newSetFromMap(IdentityHashMap())
             val blockers = IdentityHashMap<UiNode, List<Bounds>>()
             screen.windows.forEachIndexed { i, window ->
                 val root = window.root
                 if (root == null || !window.readable) return@forEachIndexed
+                // Another app's window (a chat bubble, a split screen) still hides what is under it, but is not listed.
+                if (onlyPackage != null && window.packageName != onlyPackage) return@forEachIndexed
                 // Every window above this one hides what is under it.
                 val above = screen.windows.drop(i + 1).map { it.bounds }
                 collect(root, window.id, above, screen, found, absorbed, blockers)
@@ -67,7 +70,8 @@ class ScreenText(val text: String, val elements: List<Element>, val packageName:
                 .append(n.className?.substringAfterLast('.')?.ifEmpty { null } ?: "View")
                 .append(" \"").append(truncate(e.label, if (n.actionable) MAX_LABEL else MAX_TEXT)).append('"')
             if (n.clickable) sb.append(" clickable")
-            if (n.editable) sb.append(" editable")
+            // A field showing only its hint is empty: the label is the hint, not something typed.
+            if (n.editable) sb.append(if (n.text == null) " editable empty" else " editable")
             if (n.scrollable) sb.append(" scrollable")
             if (n.checkable) sb.append(if (n.checked) " checked" else " unchecked")
             if (!n.enabled) sb.append(" disabled")

@@ -25,4 +25,5 @@ android {
 
 dependencies {
     implementation(project(":a11y"))
+    implementation(project(":agent"))
 }

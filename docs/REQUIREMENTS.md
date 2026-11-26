@@ -39,6 +39,24 @@ Decisions taken with the owner on 2026-11-25. Change them here when they change.
 - The phone locks after 30 seconds; the app must keep the screen on during
   a session.
 
+## Local (on-device) models
+
+Asked for on 2026-11-25: gyms have poor signal, so each AI part should have an on-device option next to
+the cloud one, chosen by the user. Researched the same day; nothing below has been run on the phone yet.
+
+- Apple's on-device models run only on Apple hardware and their weights are not published. Not usable here.
+- Google's Gemini Nano (AICore) is offered on Pixel 9 and later, not on the Pixel 7a.
+- Decision model: Gemma 4 E2B on Google's LiteRT-LM runtime (2.58 GB, Apache-2.0) is the general pick;
+  estimated 3 to 4 s per decision on the 7a's GPU, about 20 s on CPU. FunctionGemma 270M (288 MB) is far
+  faster but needs fine-tuning on recorded screens. Small Qwen or Llama models on llama.cpp sit in between.
+- Speech-to-text: Moonshine or Parakeet through sherpa-onnx, or Android's built-in offline recogniser.
+- Text-to-speech: Android TextToSpeech; Piper through sherpa-onnx as the alternative.
+- Wake word: sherpa-onnx keyword spotting (Apache-2.0, any typed phrase).
+- No full speech-to-speech model runs on this phone; local voice is turn-based.
+- Cheapest way to need fewer decisions offline: record each successful path through an app and replay it,
+  asking a model only when a screen differs from the recording.
+- The code already takes any OpenAI-style endpoint as the decision model (`Settings`, `ChatDecider`).
+
 ## Open
 
 - 24GO's terms on automation have not been read.
