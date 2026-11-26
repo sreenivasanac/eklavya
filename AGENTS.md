@@ -59,6 +59,13 @@ export ANDROID_HOME=/opt/homebrew/share/android-commandlinetools
   `python3 -m http.server 8080 --directory site`, then open `http://localhost:8080/`. The Android app cannot
   run in a sandbox without a phone, and CodeRabbit Verify does not test native apps: for Verify, the thing to
   start and test is the site.
+- Verify state on 2026-11-26: the repository is added at app.coderabbit.ai → Verify, its environment
+  ("eklavya") serves the site, and test instructions are saved. Three local runs
+  (`coderabbit verify --committed --base-commit <commit> --dir site --agent`) were admitted and then failed
+  while generating scenarios with "Verify could not complete because its workflow failed" and no detail.
+  Verify's own page still says "Environment setup did not complete. Retry from Setup" and uses snapshot
+  revision 1, though the environment page shows revision 2 prepared. Retrying setup starts CodeRabbit's
+  agent again (it spent about nine agent-minutes the first time): ask the owner before doing that.
 - Deploy: `rsync -az --delete --exclude DESIGN.md --exclude og.html --exclude .DS_Store site/ hetzner-agent:/var/www/eklavya/`,
   then open https://eklavya.pragnyalabs.com/ and check both pages. No analytics on this site, on purpose.
 - When the app's behaviour or measurements change, the README and the site say the same things: update both.
