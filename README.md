@@ -17,7 +17,7 @@ another app's screen and acting on it.
 | --- | --- |
 | Screen model and text form for a decision model (`screen/`) | Works, tested on the JVM against real 24GO screens |
 | Reading and driving screens through an accessibility service (`a11y/`) | Works on a Pixel 7a (Android 16) |
-| Fixed route: search 24GO and play a demo video (`app/`) | Works for exercises 24GO lists under that name; about 8 to 12 seconds from request to video |
+| Fixed route: search 24GO and play a demo video (`app/`) | Opens the demo's player for exercises 24GO lists under that name, about 7 to 12 seconds after the request; a demo already watched to the end opens paused at its end |
 | Voice, planning, Hevy logging, camera rep counting | Not started |
 
 ## How a screen looks to the model

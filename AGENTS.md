@@ -27,5 +27,7 @@ export ANDROID_HOME=/opt/homebrew/share/android-commandlinetools
 
 ## Known gaps
 
+- `TwentyFourGo.playDemo` reports success when the player page is on screen. 24GO resumes a demo where it was
+  left, so one watched to the end opens finished and paused; the route does not restart it yet.
 - `TwentyFourGo.findDemo` takes the first matching result on the current page; an exact match further down loses.
 - Other apps' accessibility overlays and system windows are not treated as covers (`ScreenReader.read`).
