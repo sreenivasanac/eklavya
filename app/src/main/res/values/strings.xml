@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Eklavya</string>
+    <string name="accessibility_description">Eklavya reads what is on screen and taps for you, so that a spoken request such as \"show me the video for this exercise\" can be carried out in your gym\'s app. It acts only when you ask.</string>
+</resources>
