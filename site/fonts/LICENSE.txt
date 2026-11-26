@@ -1,0 +1,9 @@
+bricolage-grotesque.woff2
+  Bricolage Grotesque, (c) The Bricolage Grotesque Project Authors
+  (https://github.com/ateliertriay/bricolage). Latin subset, variable weight and optical size, from Google Fonts.
+
+ibm-plex-mono-400.woff2
+  IBM Plex Mono Regular, (c) 2017 IBM Corp. (https://github.com/IBM/plex). Latin subset, from the
+  @fontsource/ibm-plex-mono package.
+
+Both are under the SIL Open Font License 1.1: https://openfontlicense.org

@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eklavya: a voice gym coach that works your gym's app</title>
+<meta name="description" content="A voice gym coach for Android that operates the fitness app already on your phone. Say “Hey Drona, show me the video for pistol squat”; it finds the exercise in your gym's app and plays its demo. Say “count my squats” and it counts through the camera and corrects your form. Early, open source, MIT.">
+<link rel="canonical" href="https://eklavya.pragnyalabs.com/">
+<meta property="og:title" content="Eklavya: a voice gym coach that works your gym's app">
+<meta property="og:description" content="Say “Hey Drona, show me the video for pistol squat.” The coach answers, finds the exercise in your gym's app and plays its demo. Early, open source, MIT.">
+<meta property="og:image" content="https://eklavya.pragnyalabs.com/images/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="“Hey Drona, show me the video for pistol squat.” Eklavya, a voice gym coach for Android, beside two screenshots of it at work.">
+<meta property="og:url" content="https://eklavya.pragnyalabs.com/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#101214">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+<link rel="preload" href="fonts/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to the content</a>
+<div class="wrap">
+
+  <header class="top">
+    <a class="brand" href="./">Eklavya</a>
+    <nav aria-label="Sections">
+      <a class="optional" href="#log">The log</a>
+      <a class="optional" href="#counts">Counting</a>
+      <a class="optional" href="#decides">How it decides</a>
+      <a class="optional" href="#sends">What it sends</a>
+      <a class="optional" href="#status">Status</a>
+      <a href="https://github.com/sreenivasanac/eklavya">GitHub</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <div class="hero">
+      <div class="hero-text">
+        <h1>“Hey Drona, show me the video for pistol squat.”</h1>
+        <p class="lead">Eklavya is a voice gym coach for Android that operates the fitness app already on your phone. Phone on a tripod, earphones in: you ask, the coach answers, finds the exercise in your gym's app and plays its demo. Ask it to count your squats and it watches through the front camera, counts aloud and tells you what to fix.</p>
+        <div class="actions">
+          <a class="button" href="https://github.com/sreenivasanac/eklavya">View on GitHub</a>
+          <a href="#log">See one request, step by step</a>
+        </div>
+        <p class="caption">Early: it works one gym's app (24GO) and has been tested with recorded requests and recorded sets, not yet with a live voice or a person in front of the camera. MIT licence. Nothing to download; you build it from the source.</p>
+      </div>
+      <figure class="hero-screen">
+        <img src="images/session-running.png" width="495" height="1100" alt="Eklavya's one screen with a session running. The largest text reads: Listening for “Hey Drona”. Under it: Nothing is sent until it hears that. Then an End session button, and four rows: Screen control, On; Microphone, Allowed; Camera, to count reps, Allowed; API keys, Saved.">
+      </figure>
+    </div>
+
+    <section id="log">
+      <div class="ledger">
+        <div class="label"><h2>One spoken request, from the app's log</h2></div>
+        <div class="entry">
+          <p>A Pixel 7a with a session running, and one request played into it on 26 November 2026. The lines are the app's own log. The notes beside them say why each step is there.</p>
+        </div>
+      </div>
+
+      <ol class="log" aria-label="The app's log of one request, with notes">
+        <li>
+          <time>01:10:37</time>
+          <p class="line">a recording is played into the session: "Hey Drona, show me the video for pistol squat."</p>
+          <p class="note">The voice path has been tested this way so far: recorded requests, not a person speaking.</p>
+        </li>
+        <li>
+          <time>01:10:40</time>
+          <p class="line">wake phrase heard</p>
+          <p class="note">The phrase is spotted on the phone. Nothing is sent anywhere until the phone itself hears it.</p>
+        </li>
+        <li>
+          <p class="say"><span class="who">user</span> Hey Drona, show me the video for Pistol Squat</p>
+        </li>
+        <li class="coach">
+          <p class="say"><span class="who">coach</span> Sure.</p>
+          <p class="note">From here the audio goes to OpenAI GPT-Live, which listens and talks at the same time. The coach says one word; the video is the answer.</p>
+        </li>
+        <li>
+          <time>01:10:45</time>
+          <p class="line step"><span>tool</span><span></span><span class="what">show_exercise_demo {"exercise":"Pistol Squat"}</span></p>
+          <p class="note">One of the coach's three tools: show a demo, count a set, report on the last set.</p>
+        </li>
+        <li>
+          <time>01:10:47</time>
+          <p class="line">went back 1 time(s) to start from the app's main screen</p>
+        </li>
+        <li>
+          <time>01:10:48</time>
+          <p class="line step"><span>tap_1</span><span class="conf">(1.00)</span><span class="what">tap [1] View "search box"</span></p>
+          <p class="note">A decision model, TypeSafe Jev, picks one action at a time from the list of what is on the screen. The figure in brackets is its confidence.</p>
+        </li>
+        <li>
+          <time>01:10:49</time>
+          <p class="line step"><span>type_2</span><span class="conf">(0.55)</span><span class="what">type "Pistol Squat" into [2] EditText "Search 1,969 Workouts and 250+ Demos"</span></p>
+        </li>
+        <li>
+          <time>01:10:50</time>
+          <p class="line step"><span>submit_2</span><span class="conf">(0.96)</span><span class="what">press the keyboard's search or enter key in [2] EditText "Pistol Squat"</span></p>
+          <p class="note">24GO searches only when the keyboard's search key is pressed.</p>
+        </li>
+        <li>
+          <time>01:10:51</time>
+          <p class="line step"><span>tap_5</span><span class="conf">(0.99)</span><span class="what">tap [5] CardView "Pistol Squat 1 minutes"</span></p>
+        </li>
+        <li>
+          <time>01:10:52</time>
+          <p class="line step"><span>tap_16</span><span class="conf">(0.87)</span><span class="what">tap [16] ViewGroup "Start Demo Exercise"</span></p>
+        </li>
+        <li>
+          <time>01:10:55</time>
+          <p class="line step"><span>done</span><span class="conf">(1.00)</span><span class="what">the task is already complete on this screen</span></p>
+        </li>
+        <li>
+          <time>01:11:03</time>
+          <p class="line">session closed, 24 s billed</p>
+          <p class="note">Voice is billed by the second, so the connection closes a few seconds after the talk ends.</p>
+        </li>
+      </ol>
+      <p class="caption log-sum">Fifteen seconds from the wake phrase to the video in this run.</p>
+
+      <div class="ledger">
+        <div class="label">
+          <h3>What that looks like on the phone</h3>
+          <p class="caption">Apart from the small status pill, these screens are 24GO's own. The pill is readable from a few steps away, and touches pass through it. <span class="swipe">Swipe sideways for all three.</span></p>
+        </div>
+        <div class="entry screens">
+          <figure>
+            <img src="images/overlay-working.png" width="495" height="1100" loading="lazy" alt="24GO's Workouts tab with a small pill at the top that reads “Working on it” beside an amber dot.">
+            <figcaption>The coach at work, over your gym's app</figcaption>
+          </figure>
+          <figure>
+            <img src="images/demo-page.png" width="495" height="1100" loading="lazy" alt="24GO's Pistol Squat demo page: a video, one minute, low intensity, no equipment, five form cues and a Start Demo Exercise button.">
+            <figcaption>The demo page it finds</figcaption>
+          </figure>
+          <figure>
+            <img src="images/player.png" width="495" height="1100" loading="lazy" alt="The Pistol Squat demo video playing full screen in 24GO, 21 seconds into 30.">
+            <figcaption>The demo playing</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section id="counts">
+      <div class="ledger">
+        <div class="label"><h2>“Hey Drona, count my squats.”</h2></div>
+        <div class="entry">
+          <p>The phone's front camera takes over. A pose model on the phone finds your joints in each frame; from those it counts reps and checks a few things a coach would look at. Counts and cues come from the phone's own voice, so no voice connection is open, or billed, while you lift.</p>
+          <figure class="chart">
+            <img src="images/squat-depth.png" width="1680" height="792" loading="lazy" alt="A line that rises and falls fifteen times over thirty seconds: how far the hips drop in one recorded set of squats. Each rise is marked as a counted rep, numbered 1 to 15. Two reps cross a dashed line marked deep enough; the other thirteen stop short of it.">
+            <figcaption>One recorded set of shallow squats, as the counter sees it. Hollow dots are the reps that stopped short.</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <ol class="log" aria-label="What the phone said during that set, from the app's log">
+        <li>
+          <p class="say"><span class="who">phone</span> Ready.</p>
+          <p class="note">That recorded set, played through the pose model on the phone. “Ready” means it can see the joints this exercise needs.</p>
+        </li>
+        <li>
+          <p class="say"><span class="who">phone</span> 1 &nbsp; 2</p>
+        </li>
+        <li class="coach">
+          <p class="say"><span class="who">phone</span> Sit deeper.</p>
+          <p class="note">A correction is said only for a fault seen on two reps running, at most once every three reps, and the same one not again for six.</p>
+        </li>
+        <li>
+          <p class="say"><span class="who">phone</span> 3 &nbsp; 4 &nbsp; 5 &nbsp; 6 &nbsp; 7 &nbsp; 8 &nbsp; 9</p>
+        </li>
+        <li class="coach">
+          <p class="say"><span class="who">phone</span> Sit deeper.</p>
+        </li>
+        <li>
+          <p class="say"><span class="who">phone</span> 10 &nbsp; 11 &nbsp; 12 &nbsp; 13 &nbsp; 14 &nbsp; 15</p>
+        </li>
+        <li class="coach">
+          <p class="say"><span class="who">phone</span> Sit deeper.</p>
+        </li>
+        <li>
+          <p class="line">set over: 15 squats in 30 seconds. Form faults seen: "Sit deeper." on 13 of 15 reps.</p>
+          <p class="note">The set closes by itself eight seconds after the last rep.</p>
+        </li>
+        <li class="coach">
+          <p class="say"><span class="who">phone</span> 15 reps. Next set, sit deeper.</p>
+          <p class="note">Asked afterwards “how was my last set?”, the coach said: “Sure. Fifteen squats in thirty seconds. Sit deeper: you missed depth on thirteen reps.”</p>
+        </li>
+      </ol>
+
+      <div class="ledger">
+        <div class="label">
+          <h3>What it counts and what it checks</h3>
+          <p class="caption">You name the exercise; it is not recognised from the picture.</p>
+        </div>
+        <div class="entry">
+          <table class="stack checks">
+            <thead><tr><th>Exercise</th><th>Stand</th><th>Checked</th></tr></thead>
+            <tbody>
+              <tr><td>Squat</td><td data-label="Stand">Side on</td><td data-label="Checked">Depth; chest dropping forward; knees caving in (from the front)</td></tr>
+              <tr><td>Bicep curl</td><td data-label="Stand">Side on</td><td data-label="Checked">Swinging the torso; elbows drifting forward; stopping short at the top or bottom; dropping the weight fast</td></tr>
+              <tr><td>Shoulder press</td><td data-label="Stand">Facing the phone</td><td data-label="Checked">Stopping short of straight arms; one arm lower than the other</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="decides">
+      <div class="ledger">
+        <div class="label"><h2>How it decides what to tap</h2></div>
+        <div class="entry">
+          <p>The navigator first backs out to the app's main screen, so every request starts from a known place. Then it reads the screen, offers the model every action that exists on it (“tap [16] Start Demo Exercise”, “type the exercise name into [2]”, “scroll [5] down”, back, done, stuck) and carries out the one it picks.</p>
+          <p>The model never writes text or coordinates, so it cannot tap something that is not there. An accessibility service carries out each action.</p>
+
+          <figure class="dump">
+            <pre><span>app: io.a24go.android.dev | 1080x2400</span><span>[2] FrameLayout "Show player controls" clickable (540,446) #detailsVideo</span><span>[3] ImageButton "fab back" clickable (73,191) #fabBack</span><span>[8] TextView "Barbell Front Squat" clickable (540,961) #detailTitle</span><span>[13] TextView "1. Start with Barbell On Shoulders 2. Position Feet Shoulder Width ..." (540,1566)</span><span>[14] ViewGroup "Start Demo Exercise" clickable (540,2242) #ctaPrimaryActionView</span></pre>
+            <figcaption>A screen reaches the model as a few numbered lines. Elements hidden under something drawn on top are left out, and icon buttons without text are named from their view id.</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="ledger">
+        <div class="label"><h3>Four rules sit outside the model's choice</h3></div>
+        <div class="entry">
+          <ol class="rows">
+            <li><span class="n">1</span><span><strong>Some buttons are never on the list.</strong> Buttons that pay, book, post or unlock are never offered.</span></li>
+            <li><span class="n">2</span><span><strong>A commitment is yours to make.</strong> Every decision also asks whether the screen wants a commitment: a payment, a booking, an account change. If so, the navigator stops and hands back.</span></li>
+            <li><span class="n">3</span><span><strong>“Done” has to be earned.</strong> It is offered only after the request has typed or tapped the thing asked for, so a video left playing by an earlier request cannot pass as the answer.</span></li>
+            <li><span class="n">4</span><span><strong>Unsure means stop.</strong> Below 40% confidence the navigator stops and says what it was unsure about.</span></li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section id="sends">
+      <div class="ledger">
+        <div class="label">
+          <h2>What it stores and sends</h2>
+          <p class="caption">An Android accessibility service can read everything on screen in every app. This is what Eklavya's service reads, and where it goes.</p>
+        </div>
+        <div class="entry">
+          <dl class="rows">
+            <div><dt>Microphone</dt><dd>While a session runs the phone listens for the wake phrase on the device, and nothing is sent until it hears it. When it does, audio goes to OpenAI until the exchange ends, starting with the 2.5 seconds before the phrase was recognised: the phrase itself and whatever was said just before it. Nothing is recorded or kept.</dd></div>
+            <div><dt>Camera</dt><dd>Used only while a set is being counted. Each frame goes through a pose model on the phone and is then dropped: no picture or video is stored, and none leaves the phone. The result (reps and faults) reaches OpenAI only if you ask the coach about your last set.</dd></div>
+            <div><dt>Screen</dt><dd>Eklavya reads only the gym app's windows, only while carrying out a request, and never copies the contents of password fields. That text, including your name if the app shows it, is sent to the decision model you chose: TypeSafe by default.</dd></div>
+            <div><dt>Keys</dt><dd>Your API keys stay in the app's private storage on the phone and are sent only to the service they belong to.</dd></div>
+            <div><dt>Nothing else</dt><dd>Nothing else leaves the phone, and there are no analytics. Release builds have no remote-control door; the debug commands exist only in debug builds and only for senders holding Android's <code>DUMP</code> permission (adb).</dd></div>
+          </dl>
+          <p style="margin-top: var(--s4)">The <a href="privacy.html">privacy page</a> sets this out in full, with what this website records.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="status">
+      <div class="ledger">
+        <div class="label">
+          <h2>Status</h2>
+          <p class="caption">Early, and built for one person on one gym's app (24GO).</p>
+        </div>
+        <div class="entry">
+          <table class="stack">
+            <thead><tr><th>Part</th><th>State</th></tr></thead>
+            <tbody>
+              <tr><td>Reading and driving another app's screen</td><td data-label="State">Works on a Pixel 7a (Android 16)</td></tr>
+              <tr><td>Finding the way with a decision model</td><td data-label="State">Works on the phone with Jev</td></tr>
+              <tr><td>Voice: wake phrase, spoken exchange, tool call, spoken result</td><td data-label="State">Works on the phone when a recording is played into the session; not yet tried with a person speaking, with earbuds, or in a gym</td></tr>
+              <tr><td>Camera: rep counting and form cues for squats, curls and shoulder presses</td><td data-label="State">Counts recorded sets correctly, on a laptop and through the pose model on the phone; the camera opens and runs with another app in front. Not yet tried with a person in front of the phone</td></tr>
+              <tr><td>What the coach can do</td><td data-label="State">Three things: show an exercise's demo in 24GO, count a set, report on the last set</td></tr>
+              <tr><td>Planning a workout, logging sets to Hevy</td><td data-label="State" class="quiet">Not started</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="ledger">
+        <div class="label">
+          <h3>Three recorded requests, measured</h3>
+          <p class="caption">Played into a running session on the phone on 25 November 2026, a day before the log above. The third is what it does when the gym's app has no such demo: it says so.</p>
+        </div>
+        <div class="entry">
+          <table class="stack requests">
+            <thead><tr><th>Request</th><th>What happened</th><th>Wake phrase to video</th><th>Voice billed</th></tr></thead>
+            <tbody>
+              <tr><td>“…show me the video for pistol squat”</td><td>Demo playing</td><td class="num" data-label="Wake phrase to video">13 s</td><td class="num" data-label="Voice billed">24 s (about 2 cents)</td></tr>
+              <tr><td>“…can you show me the box squat?”</td><td>Demo playing</td><td class="num" data-label="Wake phrase to video">12 s</td><td class="num" data-label="Voice billed">22 s</td></tr>
+              <tr><td>“…show me how to do a lat pulldown”</td><td>Coach: none listed under that name</td><td data-label="Wake phrase to video">(10 s to the answer)</td><td class="num" data-label="Voice billed">24 s</td></tr>
+            </tbody>
+          </table>
+          <p style="margin-top: var(--s4)">At about 2 cents an exchange, thirty exchanges in a workout cost about 60 cents of voice, plus well under a cent for the decision model.</p>
+          <p>Asking for a count is billed 9 seconds: the exchange closes as soon as counting starts.</p>
+        </div>
+      </div>
+
+      <div class="ledger">
+        <div class="label">
+          <h3>Counting, measured</h3>
+          <p class="caption">32 recorded sets of about 30 seconds each, four people, run through the same pose model the phone uses, on 26 November 2026.</p>
+        </div>
+        <div class="entry">
+          <dl class="rows">
+            <div><dt>Reps</dt><dd>On 29 of the 32 the count equals an independent peak count of the raw signal. The other three start mid-rep or with the dumbbells being picked up, and there the peak count is one or two higher. In the two of those checked against the video frames, the counter was right once and within one rep the other time.</dd></div>
+            <div><dt>Form</dt><dd>All four curl sets labelled as bad form got a named fault; none of the four labelled good did. The two squat sets that were plainly shallow were told “Next set, sit deeper”; no other squat set was. Two sets labelled good each got one cue mid-set. The recordings do not say which fault each “bad” set shows, so this is as far as they can check the rules.</dd></div>
+            <div><dt>On the phone</dt><dd>The pose model takes about 37 ms a frame on a Pixel 7a, and the camera path runs at about 21 frames a second with another app in front.</dd></div>
+            <div><dt>Not tested</dt><dd>A person in front of the phone's own camera, a barbell or rack hiding joints, gym lighting, and other people in the picture.</dd></div>
+          </dl>
+          <p style="margin-top: var(--s4)">To try it you need JDK 17 to 21, the Android SDK, a phone on Android 13 or later, an OpenAI API key and a TypeSafe API key. The <a href="https://github.com/sreenivasanac/eklavya#quick-start">README</a> has the steps and the rest of the measurements.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="name">
+      <div class="ledger">
+        <div class="label"><h2>Why the coach answers to Drona</h2></div>
+        <div class="entry">
+          <p>The name is from the Mahabharata. Eklavya had no access to the teacher he wanted, Drona, so he trained himself in front of a stand-in. Here you are Eklavya, and the stand-in answers to “Drona”.</p>
+          <p>The wake phrase was also chosen by test. With synthesized voices, the untrained keyword spotter caught “Hey Drona” in 16 clips out of 16, also with heavy noise mixed in, and never fired on 12 near-miss sentences (“hey Rona”, “hey Donna”, “drone”). It caught “Hey Eklavya” in none of 16. Real voices and real gym noise are still to be tried.</p>
+          <div class="actions" style="margin-top: var(--s4)">
+            <a class="button" href="https://github.com/sreenivasanac/eklavya">View on GitHub</a>
+            <a href="https://github.com/sreenivasanac/eklavya#readme">Read the README</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Eklavya, a <a href="https://pragnyalabs.com">Pragnya Labs</a> project by Sreenivasan AC. This site sets no cookies and counts no visits.</p>
+    <nav aria-label="Links">
+      <a href="https://github.com/sreenivasanac/eklavya">Source</a>
+      <a href="https://github.com/sreenivasanac/eklavya/blob/main/LICENSE">MIT licence</a>
+      <a href="https://github.com/sreenivasanac/eklavya/blob/main/NOTICE.md">Notices</a>
+      <a href="privacy.html">Privacy</a>
+    </nav>
+  </footer>
+</div>
+
+<script>
+// The log's lines arrive in order the first time it scrolls into view. Without this script, or with
+// reduced motion, the log is simply there.
+const log = document.querySelector(".log");
+if (log && "IntersectionObserver" in window && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  [...log.children].forEach((li, i) => li.style.setProperty("--i", i));
+  log.classList.add("armed");
+  new IntersectionObserver((entries, seen) => {
+    if (entries.some((e) => e.isIntersecting)) { log.classList.add("run"); seen.disconnect(); }
+  }, { rootMargin: "0px 0px -15% 0px" }).observe(log);
+}
+</script>
+</body>
+</html>

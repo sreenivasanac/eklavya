@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy · Eklavya</title>
+<meta name="description" content="What Eklavya reads on your phone, what it sends and to whom, what it keeps, and what this website records.">
+<link rel="canonical" href="https://eklavya.pragnyalabs.com/privacy.html">
+<meta name="theme-color" content="#101214">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+<link rel="preload" href="fonts/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to the content</a>
+<div class="wrap page">
+
+  <header class="top">
+    <a class="brand" href="./">Eklavya</a>
+    <nav aria-label="Site">
+      <a href="./">Home</a>
+      <a href="https://github.com/sreenivasanac/eklavya">GitHub</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <h1>Privacy</h1>
+    <p class="caption" style="margin-top: var(--s2)">Last updated 26 November 2026. Applies to the Eklavya app as it is in the repository today, and to this website.</p>
+    <p class="lead">Eklavya works through an Android accessibility service, and an accessibility service can read everything on screen in every app. Eklavya reads only the gym app's windows, only while carrying out a request. Audio and that screen text go to the two model services you gave keys for. Nothing else leaves the phone, and there are no analytics.</p>
+
+    <h2>The microphone</h2>
+    <p>While a session runs, the phone listens for the wake phrase, “Hey Drona”, on the device. Nothing is sent anywhere until the phone itself hears it. When it does, audio goes to OpenAI until the exchange ends, and the connection closes a few seconds after the talk ends. Nothing is recorded or kept.</p>
+    <p>The audio that is sent starts 2.5 seconds before the moment the phrase was recognised. The phone needs a moment to recognise the phrase, so without this the first word after “Hey Drona” would be lost. Those seconds hold the phrase itself and whatever was said just before it, by you or by someone near you.</p>
+    <p>A session starts only when you tap <strong>Start session</strong> on the app's screen. <strong>End session</strong> stops the listening.</p>
+
+    <h2>The camera</h2>
+    <p>The front camera is used only while a set is being counted, which starts when you ask for a count and ends by itself when the set does. Each frame goes through a pose model on the phone, which finds the positions of your joints, and is then dropped. No picture or video is stored, and none leaves the phone.</p>
+    <p>What is kept is the result of the last set: the number of reps and the form faults seen. The app holds it until the session ends, and it is also written to Android's system log on the phone, with the app's other steps, where it stays for as long as Android keeps that log. It is sent to OpenAI only if you ask the coach about that set. The camera is optional: without the permission everything else works.</p>
+
+    <h2>The screen</h2>
+    <p>Eklavya reads only the gym app's windows, only while carrying out a request, and never copies the contents of password fields. What it reads is the text of the screen as a short numbered list: the labels of buttons, titles and fields, and where they are.</p>
+    <p>That text, including your name if the gym's app shows it, is sent to the decision model you chose. By default that is TypeSafe; the app can be set to use another OpenAI-style chat service instead (OpenAI, xAI or OpenRouter).</p>
+    <p>A screen that asks for a payment, a booking or an account change stops the coach: it hands back to you.</p>
+
+    <h2>What goes where</h2>
+    <table class="stack">
+      <thead><tr><th>What</th><th>When</th><th>Sent to</th></tr></thead>
+      <tbody>
+        <tr><td>Audio from the microphone</td><td data-label="When">From 2.5 seconds before the wake phrase is recognised until the exchange ends</td><td data-label="Sent to">OpenAI</td></tr>
+        <tr><td>The gym app's screen, as text</td><td data-label="When">While a request is being carried out</td><td data-label="Sent to">The decision model you chose (TypeSafe by default)</td></tr>
+        <tr><td>Camera frames</td><td data-label="When">While a set is being counted</td><td data-label="Sent to">Nowhere: used on the phone and dropped</td></tr>
+        <tr><td>The last set's reps and form faults</td><td data-label="When">Only when you ask the coach about your last set</td><td data-label="Sent to">OpenAI</td></tr>
+        <tr><td>Each API key</td><td data-label="When">With requests to its own service</td><td data-label="Sent to">Only the service it belongs to</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top: var(--s3)">OpenAI and TypeSafe handle what they receive under their own terms, with the keys and accounts that are yours.</p>
+
+    <h2>What stays on the phone</h2>
+    <ul>
+      <li>Your API keys, in the app's private storage. A saved key is never shown again; the field only says it is saved.</li>
+      <li>The app's steps, in Android's own system log: the wake phrase being heard, the tool call, each tap and what it tapped, and the seconds billed. These are the lines shown on the home page. What the phone says during a set (the counts and cues) and the set's result are written there too. Debug builds also write the words spoken by you and the coach; release builds do not. The log stays on the phone and is read with adb.</li>
+      <li>Nothing else. Audio is not recorded or kept.</li>
+    </ul>
+
+    <h2>What the app does not have</h2>
+    <ul>
+      <li>No analytics.</li>
+      <li>No remote-control door in release builds. The debug commands exist only in debug builds, and only for senders holding Android's <code>DUMP</code> permission (adb).</li>
+    </ul>
+    <p>The developer receives nothing about you, your voice or your screen.</p>
+
+    <h2>What is not tested yet</h2>
+    <p>Eklavya is early and built for one person on one gym's app (24GO). The voice path has been tried with recorded requests on a Pixel 7a, not yet with a person speaking, with earbuds, or in a gym. The <a href="./#status">status section</a> on the home page lists what works.</p>
+
+    <h2>This website</h2>
+    <ul>
+      <li>No analytics, no visit counting and no cookies.</li>
+      <li>The fonts and images are served from this site. The page makes no request to any other site until you follow a link.</li>
+      <li>The web server keeps ordinary access logs, which include IP addresses.</li>
+    </ul>
+
+    <h2>Questions</h2>
+    <p>The app's source code is <a href="https://github.com/sreenivasanac/eklavya">public</a>, so everything on this page can be checked against it. To ask about anything here, <a href="https://github.com/sreenivasanac/eklavya/issues">open an issue on GitHub</a>. If the app changes in a way that affects this page, the page and its date change with it.</p>
+  </main>
+
+  <footer>
+    <p>Eklavya, a <a href="https://pragnyalabs.com">Pragnya Labs</a> project by Sreenivasan AC.</p>
+    <nav aria-label="Links">
+      <a href="./">Home</a>
+      <a href="https://github.com/sreenivasanac/eklavya">Source</a>
+      <a href="https://github.com/sreenivasanac/eklavya/blob/main/LICENSE">MIT licence</a>
+    </nav>
+  </footer>
+</div>
+</body>
+</html>

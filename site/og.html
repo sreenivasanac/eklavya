@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<title>Eklavya: the picture used when the site is shared</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* The source of images/og.png: 1200 by 630. DESIGN.md has the command that photographs it. */
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  .card { position: relative; width: 1200px; height: 630px; padding: 56px 64px; }
+  .brand { font-size: 1.75rem; min-height: 0; }
+  .brand::before { width: 16px; height: 16px; }
+  h1 { font-size: 4.5rem; width: 600px; margin-top: 52px; text-indent: -0.37em; }
+  .card p { position: absolute; left: 64px; bottom: 56px; width: 540px; margin: 0; font-size: 1.625rem; line-height: 1.35; color: var(--muted); }
+  .phone { position: absolute; width: 250px; border: 1px solid var(--outline); border-bottom: 0; border-radius: 26px 26px 0 0; overflow: hidden; }
+  .phone img { width: 100%; }
+  .one { left: 644px; top: 140px; }
+  .two { left: 918px; top: 84px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <span class="brand">Eklavya</span>
+  <h1>“Hey Drona, show me the video for pistol squat.”</h1>
+  <p>A voice gym coach for Android that operates the fitness app already on your phone.</p>
+  <div class="phone one"><img src="images/session-running.png" alt=""></div>
+  <div class="phone two"><img src="images/overlay-working.png" alt=""></div>
+</div>
+</body>
+</html>

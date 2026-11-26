@@ -1,0 +1,242 @@
+/* Eklavya's website. Rules and reasons are in DESIGN.md; colours are the app's own tokens. */
+
+@font-face {
+  font-family: "Bricolage Grotesque";
+  src: url("fonts/bricolage-grotesque.woff2") format("woff2");
+  font-weight: 200 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("fonts/ibm-plex-mono-400.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
+:root {
+  --bg: #101214;
+  --surface: #1A1D21;
+  --divider: #2A2E33;
+  --text: #F2F0EA;
+  --muted: #9BA1A6;
+  --accent: #F2A93B;
+  --on-accent: #17130A;
+  --outline: rgba(255, 255, 255, 0.14); /* the 1 px edge on a screenshot */
+
+  --sans: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --s1: 8px; --s2: 16px; --s3: 24px; --s4: 40px; --s5: 64px; --s6: 104px;
+  --gutter: 24px;
+  --side: max(24px, 4vw); /* page margin: grows with the window so the H1's hanging quotation mark always has room */
+  --measure: 60ch;
+  --ease: cubic-bezier(0.23, 1, 0.32, 1);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 400 1.0625rem/1.6 var(--sans);
+  -webkit-font-smoothing: antialiased;
+  text-wrap: pretty;
+}
+img { display: block; max-width: 100%; height: auto; }
+
+/* Type roles: display, headline, body, caption, mono. */
+h1, h2, h3 { margin: 0; font-weight: 600; text-wrap: balance; }
+h1 {
+  font-size: clamp(2.5rem, 1rem + 5.4vw, 5rem);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  text-indent: -0.37em; /* hangs the opening quotation mark in the margin, so the H lines up with the text below */
+}
+h2 { font-size: clamp(1.75rem, 1.2rem + 1.6vw, 2.375rem); line-height: 1.1; letter-spacing: -0.02em; }
+h3 { font-size: 1.25rem; line-height: 1.25; letter-spacing: -0.01em; }
+p { margin: 0 0 var(--s2); max-width: var(--measure); }
+p:last-child { margin-bottom: 0; }
+.caption, figcaption { font-size: 0.875rem; line-height: 1.5; color: var(--muted); }
+code, pre, .mono { font-family: var(--mono); font-size: 0.875rem; font-variant-numeric: tabular-nums; }
+p code, td code, dd code { color: var(--muted); }
+
+a { color: var(--accent); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+
+.wrap { max-width: calc(1200px + 2 * var(--side)); margin: 0 auto; padding: 0 var(--side); }
+.skip { position: absolute; left: -999px; }
+.skip:focus { left: var(--s2); top: var(--s2); background: var(--bg); padding: var(--s1) var(--s2); z-index: 1; }
+
+/* Header */
+.top { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); padding: var(--s3) 0; }
+.brand { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-weight: 600; font-size: 1.25rem; letter-spacing: -0.01em; color: var(--text); text-decoration: none; }
+.brand::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); flex: none; }
+.top nav { display: flex; gap: var(--s3); }
+.top nav a { display: inline-flex; align-items: center; min-height: 44px; color: var(--muted); text-decoration: none; font-size: 1rem; transition: color 150ms var(--ease); }
+.top nav a:hover, .top nav a.here { color: var(--text); }
+
+/* The one button */
+.button {
+  display: inline-flex; align-items: center; justify-content: center; flex: none;
+  min-height: 56px; padding: 0 var(--s3);
+  background: var(--accent); color: var(--on-accent);
+  font-weight: 600; font-size: 1.0625rem; text-decoration: none;
+  border-radius: 12px;
+  transition: transform 140ms var(--ease), background-color 140ms var(--ease);
+}
+.button:hover { background: #F6B957; }
+.button:active { transform: scale(0.97); }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--s3); }
+.actions a:not(.button) { display: inline-flex; align-items: center; min-height: 48px; }
+
+/* Hero: the request on the left, the app's one screen on the right, cut off by the rule below it. */
+.hero { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--gutter); padding-top: var(--s4); border-bottom: 1px solid var(--divider); }
+.hero-text { grid-column: 1 / span 7; padding-bottom: var(--s6); }
+.hero .lead { font-size: 1.3125rem; line-height: 1.45; max-width: 34em; margin: var(--s4) 0; }
+.hero .caption { margin-top: var(--s3); max-width: 52ch; }
+/* The screen starts level with the H1 and runs down to the rule; however tall the text is, the rule cuts it. */
+.hero-screen { grid-column: 9 / span 4; margin: 12px 0 0; border: 1px solid var(--outline); border-bottom: 0; border-radius: 28px 28px 0 0; overflow: hidden; position: relative; }
+.hero-screen img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; }
+
+/* Sections: a label column and an entry column, divided by hairlines. */
+section { padding: var(--s6) 0; border-bottom: 1px solid var(--divider); }
+.ledger { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--gutter); row-gap: var(--s3); }
+.ledger > .label { grid-column: 1 / span 4; }
+.ledger > .entry { grid-column: 6 / span 7; }
+.ledger + .ledger { margin-top: var(--s5); padding-top: var(--s5); border-top: 1px solid var(--divider); }
+.entry > * + h3 { margin-top: var(--s5); }
+.entry > h3 + * { margin-top: var(--s2); }
+.label .caption { margin-top: var(--s2); max-width: 34ch; }
+
+/* The session log: time, the app's own line, and a note beside it. */
+.log { list-style: none; margin: var(--s5) 0 0; padding: 0; border-bottom: 1px solid var(--divider); }
+.log li { display: grid; grid-template-columns: 9ch minmax(0, 1fr) minmax(0, 21rem); column-gap: var(--gutter); align-items: baseline; padding: 14px 0; border-top: 1px solid var(--divider); }
+.log time, .log .line { font-family: var(--mono); font-size: 0.875rem; line-height: 1.6; font-variant-numeric: tabular-nums; }
+.log time { color: var(--muted); grid-column: 1; }
+.log .line, .log .say { grid-column: 2; margin: 0; max-width: none; overflow-wrap: anywhere; }
+.log .line, .dump pre { text-wrap: wrap; }
+.log .step { display: grid; grid-template-columns: 9ch 7ch minmax(0, 1fr); column-gap: var(--s2); }
+.log .step .conf { color: var(--muted); }
+/* 9.4rem is the width of the step's first two columns, so speech lines up with what was tapped */
+.log .say { font-size: 1.3125rem; line-height: 1.35; letter-spacing: -0.01em; display: grid; grid-template-columns: 9.4rem minmax(0, 1fr); column-gap: var(--s2); align-items: baseline; }
+.log .who { font-family: var(--mono); font-size: 0.875rem; letter-spacing: 0; color: var(--muted); }
+.log .coach .who::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 8px; vertical-align: 1px; }
+.log .note { grid-column: 3; margin: 0; font-size: 0.875rem; line-height: 1.5; color: var(--muted); }
+.log-sum { margin-top: var(--s2); }
+.log-sum + .ledger { margin-top: var(--s5); }
+.log + .ledger { margin-top: var(--s5); }
+
+/* The log's lines arrive in order, once. Only when the script has armed it; see index.html. */
+.log.armed li > * { opacity: 0; transform: translateY(6px); }
+.log.armed.run li > * { opacity: 1; transform: none; transition: opacity 500ms var(--ease) calc(var(--i) * 90ms), transform 500ms var(--ease) calc(var(--i) * 90ms); }
+
+/* Screenshots */
+.screens { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gutter); }
+.screens figure { margin: 0; }
+.screens img { width: 100%; border-radius: 20px; outline: 1px solid var(--outline); outline-offset: -1px; }
+.screens figcaption { margin-top: var(--s2); }
+
+/* The screen as the model reads it: the one boxed element. Long lines wrap with a hanging indent. */
+.chart { margin: var(--s4) 0 0; }
+.chart img { width: 100%; border-radius: 12px; }
+.chart figcaption { margin-top: var(--s2); max-width: var(--measure); }
+.dump { margin: var(--s4) 0 0; }
+.dump pre { margin: 0; padding: var(--s3); background: var(--surface); border-radius: 12px; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.7; color: var(--text); }
+.dump pre span { display: block; padding-left: 5ch; text-indent: -5ch; }
+.dump figcaption { margin-top: var(--s2); max-width: var(--measure); }
+
+/* Lists that read as ledger rows */
+.rows { list-style: none; margin: 0; padding: 0; }
+.rows > li, .rows > div { display: grid; grid-template-columns: 9rem minmax(0, 1fr); column-gap: var(--gutter); padding: var(--s3) 0; border-top: 1px solid var(--divider); }
+.rows > :first-child { border-top: 0; padding-top: 0; } /* the first row starts level with its heading */
+.rows > :last-child { padding-bottom: 0; }
+.rows dt, .rows .n { color: var(--muted); }
+.rows .n { font-family: var(--mono); font-size: 0.875rem; line-height: 1.95; }
+.rows dd { margin: 0; }
+.rows strong, table strong { font-weight: 600; }
+ol.rows > li { grid-template-columns: 3ch minmax(0, 1fr); column-gap: var(--s2); }
+dl.rows { margin: 0; }
+
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; vertical-align: top; padding: var(--s2) var(--s3) var(--s2) 0; border-top: 1px solid var(--divider); font-weight: 400; }
+th:last-child, td:last-child { padding-right: 0; }
+th:first-child { width: 38%; }
+.checks th:first-child { width: 24%; }
+.checks th:nth-child(2) { width: 26%; }
+.requests th:first-child { width: 30%; }
+.requests th:nth-child(2) { width: 28%; }
+.swipe { display: none; }
+thead th { border-top: 0; padding-top: 0; font-size: 0.875rem; color: var(--muted); }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.quiet { color: var(--muted); }
+
+footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--s2) var(--s4); padding: var(--s4) 0 var(--s5); font-size: 0.9375rem; color: var(--muted); }
+footer nav { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s3); }
+footer nav a { display: inline-block; padding: 10px 0; color: var(--muted); text-decoration: none; transition: color 150ms var(--ease); }
+footer nav a:hover { color: var(--text); }
+footer p { margin: 0; padding: 10px 0; max-width: none; }
+
+/* The privacy page is one column of text. */
+.wrap.page { max-width: 800px; }
+.page h1 { font-size: clamp(2.25rem, 1.5rem + 3vw, 3.25rem); text-indent: 0; margin-top: var(--s5); }
+.page h2 { font-size: 1.5rem; margin: var(--s5) 0 var(--s2); }
+.page main { padding-bottom: var(--s6); border-bottom: 1px solid var(--divider); }
+.page .lead { font-size: 1.1875rem; line-height: 1.5; margin-top: var(--s3); }
+.page ul { margin: 0 0 var(--s2); padding-left: 1.2em; max-width: var(--measure); }
+.page li { margin-bottom: var(--s1); }
+.page table { margin-top: var(--s3); }
+
+/* Narrower than this the text column can be taller than the whole screenshot, so the screen sits on the rule at a fixed shape instead. */
+@media (max-width: 1240px) {
+  .hero-screen { align-self: end; margin: 0; aspect-ratio: 495 / 760; }
+}
+
+@media (max-width: 960px) {
+  :root { --s6: 72px; }
+  .ledger > .label, .ledger > .entry { grid-column: 1 / -1; }
+  .label .caption { max-width: var(--measure); }
+  .hero-text { grid-column: 1 / span 8; }
+  .hero-screen { grid-column: 9 / span 4; }
+  /* The note drops under its line. */
+  .log li { grid-template-columns: 9ch minmax(0, 1fr); row-gap: 6px; }
+  .log .note { grid-column: 2; max-width: 52ch; }
+}
+
+@media (max-width: 720px) {
+  :root { --gutter: 16px; --side: 16px; --s6: 64px; --s5: 48px; }
+  .top nav a.optional { display: none; }
+  h1 { text-indent: 0; } /* no margin to hang the quotation mark in */
+  .hero { padding-top: var(--s3); }
+  .hero-text { grid-column: 1 / -1; padding-bottom: var(--s5); }
+  .hero .lead { font-size: 1.1875rem; margin: var(--s3) 0; }
+  .hero-screen { grid-column: 1 / -1; margin: 0; aspect-ratio: 495 / 640; }
+  .log li { grid-template-columns: minmax(0, 1fr); }
+  .log time, .log .line, .log .say, .log .note { grid-column: 1; }
+  .log .step { grid-template-columns: auto minmax(0, 1fr); }
+  .log .step .what { grid-column: 1 / -1; }
+  .log .say { font-size: 1.1875rem; grid-template-columns: minmax(0, 1fr); }
+  /* Three tall screenshots side by side: swipe through them. */
+  .screens { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 calc(-1 * var(--side)); padding: 0 var(--side) var(--s1); scroll-padding: 0 var(--side); }
+  .screens figure { flex: none; width: 68%; scroll-snap-align: start; }
+  .swipe { display: inline; }
+  .rows > li, .rows > div { grid-template-columns: minmax(0, 1fr); row-gap: 4px; }
+  ol.rows > li { grid-template-columns: 3ch minmax(0, 1fr); }
+  /* Tables become one block per row, each cell under its own column name. */
+  table.stack thead { position: absolute; left: -999px; }
+  table.stack tr { display: block; padding: var(--s2) 0; border-top: 1px solid var(--divider); }
+  table.stack tbody tr:first-child { border-top: 0; padding-top: 0; }
+  table.stack td { display: block; border: 0; padding: 2px 0; }
+  table.stack td[data-label]::before { content: attr(data-label) ": "; color: var(--muted); }
+}
+
+@media print {
+  .log.armed li > * { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .button, .top nav a, footer nav a { transition: none; }
+}
